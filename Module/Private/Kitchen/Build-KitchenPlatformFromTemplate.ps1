@@ -37,6 +37,11 @@ function Build-KitchenPlatformFromTemplate
         [PuppetAgentVersion]
         $PuppetVersion = 'latest',
 
+        # The major version(s) of Puppet this platform should test against
+        [Parameter(Mandatory = $false)]
+        [int[]]
+        $PuppetMajorVersion = $script:DefaultPuppetMajorVersion,
+
         # The directory the template files live in
         [Parameter(Mandatory = $false)]
         [string]
@@ -96,6 +101,7 @@ function Build-KitchenPlatformFromTemplate
                 OperatingSystem    = $OperatingSystem
                 OSRelease          = $OSReleases
                 PuppetAgentVersion = $PuppetVersion
+                PuppetMajorVersion = $PuppetMajorVersion
             }
         }
         Write-Debug "Platforms:$($Platforms | Out-String)"
@@ -111,8 +117,13 @@ function Build-KitchenPlatformFromTemplate
             Write-Debug 'Performing lookup for latest Windows Puppet Agent version'
             try
             {
+                $Versions = $WindowsPACheck | Select-Object -ExpandProperty PuppetMajorVersion -Unique
+                if (!$Versions)
+                {
+                    Write-Error "Unable to determine platform puppet versions"
+                }
                 $LatestWindowsPuppet = Get-LatestWindowsPuppetAgentVersion `
-                    -MajorVersion $global:PuppetMajorVersion `
+                    -MajorVersion $Versions `
                     -ErrorAction 'Stop'
             }
             catch
@@ -129,66 +140,73 @@ function Build-KitchenPlatformFromTemplate
             }
             foreach ($Release in $Entry.OSRelease)
             {
-                $Template = $PlatformTemplate
-                $PlatformName = $Entry.PlatformName
-                if ($AppendRelease -eq $true)
+                foreach ($MajorVersion in $Entry.PuppetMajorVersion)
                 {
-                    $PlatformName = $PlatformName + "_$Release"
-                }
-                # Remove any whitespace from the platform name and cast it to lowercase
-                $PlatformName = ($PlatformName -replace '\s','_').ToLower()
-                # This comment will be used to automagically update vagrant boxes when changing major versions
-                $OSVersionComment = "$($Entry.OperatingSystem)-$($Entry.OSRelease)"
-                $PAComment = "Sometimes it's handy to lock the Puppet version to a specific release if we need to avoid a particularly buggy release."
-                if ($Entry.OperatingSystem -like '*windows*')
-                {
-                    $VMHostname = 'windows-tests'
-                }
-                else
-                {
-                    $VMHostname = 'linux-tests'
-                }
-                # Ensure the Puppet Agent version is hardcoded on Windows until kitchen-puppet or Puppet handles things better
-                if (($Entry.OperatingSystem -like '*windows*') -and ($Entry.PuppetAgentVersion -eq 'latest'))
-                {
-                    $PAComment = " On Windows 'latest' defaults to an ancient version of Puppet (due to the way Puppetlabs structure their downloads and how kitchen-puppet handles latest)`n      # so we unfortunately need to explicitly set this "
-                    $PlatformPuppetVersion = $LatestWindowsPuppet
-                }
-                else
-                {
-                    $PlatformPuppetVersion = $Entry.PuppetAgentVersion.ToString()
-                }
-                if ($BoxURLS)
-                {
-                    $BoxPlatform = $BoxURLS.GetEnumerator() |
-                        Where-Object { $_.Key.ToLower() -eq $Entry.OperatingSystem.ToLower() } | 
-                            Select-Object -ExpandProperty Value
-                    if (!$BoxPlatform)
+                    $Template = $PlatformTemplate
+                    $PlatformName = $Entry.PlatformName
+                    if ($AppendRelease -eq $true)
                     {
-                        Write-Error "Cannot find any platforms that match $($Entry.OperatingSystem.ToLower()) in boxes.json"
-                        # If we're not stopping on errors then we'll need to skip over this one
-                        Continue
+                        $PlatformName = $PlatformName + "_$Release"
                     }
-                    $BoxURL = $BoxPlatform.GetEnumerator() | 
-                        Where-Object { $_.Key.ToLower() -eq $Release.ToLower() } | 
-                            Select-Object -ExpandProperty Value
-                }
-                ## Build up the template
-                # Set the name of the platform
-                $Template = $Template -replace '<PLATFORM_NAME>', $PlatformName
-                # Set the URL of the box
-                $Template = $Template -replace '<BOX_URL>', $BoxURL
-                # Set the comment for this box so we can easily replace it.
-                $Template = $Template -replace '<OS_VERSION_TAG>', $OSVersionComment
-                # Set the VM hostname (it's commented out in the config, but handy to have in case we run into the hostname too long bug)
-                $Template = $Template -replace '<VM_HOSTNAME>', $VMHostname
-                # Set the comment for the platform
-                $Template = $Template -replace '<PUPPET_AGENT_VERSION_COMMENT>', $PAComment
-                # Set the version of Puppet for this platform
-                $Template = $Template -replace '<PUPPET_AGENT_VERSION>', $PlatformPuppetVersion
+                    # Remove any whitespace from the platform name and cast it to lowercase
+                    $PlatformName = ($PlatformName -replace '\s', '_').ToLower()
+                    # This comment will be used to automagically update vagrant boxes when changing major versions
+                    $OSVersionComment = "$($Entry.OperatingSystem)-$($Entry.OSRelease)"
+                    $PAComment = "Sometimes it's handy to lock the Puppet version to a specific release if we need to avoid a particularly buggy release."
+                    if ($Entry.OperatingSystem -like '*windows*')
+                    {
+                        $VMHostname = 'windows-tests'
+                    }
+                    else
+                    {
+                        $VMHostname = 'linux-tests'
+                    }
+                    # Ensure the Puppet Agent version is hardcoded on Windows until kitchen-puppet or Puppet handles things better
+                    if (($Entry.OperatingSystem -like '*windows*') -and ($Entry.PuppetAgentVersion -eq 'latest'))
+                    {
+                        $PAComment = " On Windows 'latest' defaults to an ancient version of Puppet (due to the way Puppetlabs structure their downloads and how kitchen-puppet handles latest)`n      # so we unfortunately need to explicitly set this "
+                        $PlatformPuppetVersion = $LatestWindowsPuppet | Where-Object {$_.MajorVersion -eq $MajorVersion}
+                        if (!$PlatformPuppetVersion)
+                        {
+                            throw "Got a null Puppet Agent version."
+                        }
+                    }
+                    else
+                    {
+                        $PlatformPuppetVersion = $Entry.PuppetAgentVersion.ToString()
+                    }
+                    if ($BoxURLS)
+                    {
+                        $BoxPlatform = $BoxURLS.GetEnumerator() |
+                            Where-Object { $_.Key.ToLower() -eq $Entry.OperatingSystem.ToLower() } | 
+                                Select-Object -ExpandProperty Value
+                        if (!$BoxPlatform)
+                        {
+                            Write-Error "Cannot find any platforms that match $($Entry.OperatingSystem.ToLower()) in boxes.json"
+                            # If we're not stopping on errors then we'll need to skip over this one
+                            Continue
+                        }
+                        $BoxURL = $BoxPlatform.GetEnumerator() | 
+                            Where-Object { $_.Key.ToLower() -eq $Release.ToLower() } | 
+                                Select-Object -ExpandProperty Value
+                    }
+                    ## Build up the template
+                    # Set the name of the platform
+                    $Template = $Template -replace '<PLATFORM_NAME>', $PlatformName
+                    # Set the URL of the box
+                    $Template = $Template -replace '<BOX_URL>', $BoxURL
+                    # Set the comment for this box so we can easily replace it.
+                    $Template = $Template -replace '<OS_VERSION_TAG>', $OSVersionComment
+                    # Set the VM hostname (it's commented out in the config, but handy to have in case we run into the hostname too long bug)
+                    $Template = $Template -replace '<VM_HOSTNAME>', $VMHostname
+                    # Set the comment for the platform
+                    $Template = $Template -replace '<PUPPET_AGENT_VERSION_COMMENT>', $PAComment
+                    # Set the version of Puppet for this platform
+                    $Template = $Template -replace '<PUPPET_AGENT_VERSION>', $PlatformPuppetVersion
 
-                # Add the fully built template to the return object
-                $Return += $Template
+                    # Add the fully built template to the return object
+                    $Return += $Template
+                }
             }
         }
     }

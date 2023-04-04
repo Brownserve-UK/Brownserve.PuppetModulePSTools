@@ -148,6 +148,7 @@ class KitchenPlatform
     [String]$PlatformName
     [string]$OperatingSystem
     [string[]]$OSRelease
+    [int[]]$MajorPuppetVersion
     $PuppetAgentVersion
 
     # Currently we only support building this object from a structured hash
@@ -167,6 +168,11 @@ class KitchenPlatform
         if ($null -eq $PA)
         {
             throw "Cannot form object from given hashtable. Hashtable must contain a key called 'PuppetAgentVersion'"
+        }
+        $PMV = $KitchenPlatform.PuppetMajorVersion
+        if ($null -eq $PMV)
+        {
+            throw "Cannot form object from given hashtable. Hashtable must contain a key called 'PuppetMajorVersion"
         }
         $PlatformNameCheck = $KitchenPlatform.PlatformName
         if ($null -eq $PlatformNameCheck)

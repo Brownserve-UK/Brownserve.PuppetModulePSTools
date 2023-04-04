@@ -61,6 +61,11 @@ function New-BrownservePuppetModule
         [OSRelease[]]
         $TestOperatingSystemReleases = 'stable',
 
+        # The major version(s) of Puppet this module targets and should therefore test against
+        [Parameter(Mandatory = $false)]
+        [int[]]
+        $PuppetMajorVersion = $script:DefaultPuppetMajorVersion,
+
         # The version of Puppet to test against
         [Parameter(Mandatory = $false)]
         [PuppetAgentVersion]

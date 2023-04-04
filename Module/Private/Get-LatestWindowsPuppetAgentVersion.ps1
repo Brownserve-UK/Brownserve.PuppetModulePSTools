@@ -89,7 +89,10 @@ function Get-LatestWindowsPuppetAgentVersion
                 if ($LatestVersion)
                 {
                     Write-Debug "Determined latest version to be $LatestVersion"
-                    $Return += $LatestVersion
+                    $Return += @{
+                        MajorVersion = $Version
+                        Release      = $LatestVersion
+                    }
                 }
             }
         }
