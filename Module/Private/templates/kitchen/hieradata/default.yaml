@@ -1,0 +1,6 @@
+---
+
+# Disable things that aren't compatible with Kitchen tests
+common::monitor: false
+common::manage_users: false
+common::manage_puppet: false

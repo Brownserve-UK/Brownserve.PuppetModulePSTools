@@ -1,0 +1,5 @@
+paket.lock
+packages/
+paket-files/
+.tmp/
+

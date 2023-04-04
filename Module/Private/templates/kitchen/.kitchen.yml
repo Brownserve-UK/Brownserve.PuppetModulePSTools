@@ -1,0 +1,55 @@
+---
+# Modified from https://github.com/scoopex/puppet-kitchen_template/blob/master/.kitchen.yml
+# For help see https://github.com/neillturner/kitchen-puppet/blob/master/provisioner_options.md
+
+# We use vagrant to perform our kitchen tests
+driver:
+  name: vagrant
+
+# Default options to pass to the provisioner, these can be overridden on test/suite basis below
+provisioner:
+  name: puppet_apply
+  manifests_path: spec/manifests
+  manifest: ### <MANIFEST_NAME> ###
+  modules_path: ../../ext-modules:../../modules
+  hiera_data_path: spec/hieradata # use a local hieradata folder for this suite which allows us to set our parameters specifically for Kitchen tests
+  hiera_deep_merge: false # When using multiple hiera files you may need to enable this.
+  custom_facts:
+    'integration_test': true # Add a fact so that we can easily tell when we're running in a kitchen test and bypass break-y things
+  ignored_paths_from_root:
+        - .kitchen # Stops us copying the .kitchen folder
+  puppet_verbose: true
+  puppet_debug: false
+  require_chef_for_busser: false
+  resolve_with_librarian_puppet: false # defaults to true but we don't want it because we use r10k. (https://github.com/voxpupuli/librarian-puppet)
+  require_puppet_repo: false
+  verify_host_key: false
+  hiera_config_path: ../../hiera.tests.yaml
+  puppet_detailed_exitcodes: true
+  max_retries: 2
+  wait_for_retry: 10
+  retry_on_exit_code:
+        - 2 # The run succeeded, and some resources were changed.
+        - 4 # The run succeeded, and some resources were changed.
+        - 6 # The run succeeded, and included both changes and failures.
+  
+  # The below are custom options that can be useful when debugging things
+
+  #puppet_verbose: true # Extra information logging on puppet run.
+  #puppet_show_diff: true # Show diffs for changes to config files during puppet runs.
+  #puppet_noop: true # Perform a no-op to see what _would_ have been changed.
+
+verifier:
+  name: shell
+
+# Suites are where you can define serverspec tests to perform
+# You may want to override the manifest specified in the provisioner section above
+# in each suite if you need to call a specific manifest for your test(s).
+suites:
+### <SUITES_DEFINITION> ###
+
+# Platforms are where we define the various operating systems that we use to run our tests against.
+# You may want to override the manifest specified in the provisioner section above
+# in each platform if you need to call a specific manifest for your desired environment.
+platforms:
+### <PLATFORMS_DEFINITION> ###

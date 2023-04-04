@@ -1,0 +1,17 @@
+  - name: '<PLATFORM_NAME>'
+    driver_plugin: vagrant
+    driver_config:
+      box_url: '<BOX_URL>' # <OS_VERSION_TAG>
+    driver:
+      ## vagrant automatically generates a hostname, if that exceeds 64 characters vbox fails (see bug #6), uncomment the following line to set a custom VM hostname
+      #vm_hostname: '<VM_HOSTNAME>'
+      ## If it's helpful you can uncomment the below to sync a directory between your host machine and vagrant
+      #synced_folders: 
+      #- ['./files']
+      ## You can also uncomment the below to adjust network settings for the box if needed
+      #network:
+      #- ['private_network', {ip: '192.168.69.2'}]
+      #- ["forwarded_port", {guest: 80, host: 8080}]
+    provisioner:
+      # <PUPPET_AGENT_VERSION_COMMENT>
+      puppet_version: '<PUPPET_AGENT_VERSION>'
