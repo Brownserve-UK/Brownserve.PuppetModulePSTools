@@ -8,7 +8,7 @@
     that determines what version of Puppet to be installed.
     So we need to manually work out what 'latest' is at the time of this cmdlet being called and then set that
     explicitly in the platform config.
-    This does mean that we'll need to update this on occasion though.
+    This does mean that we'll need to update the kitchen manifests from time to time to get updates.
 .EXAMPLE
     Get-LatestWindowsPuppetAgentVersion -MajorVersion 6
     
@@ -26,9 +26,9 @@ function Get-LatestWindowsPuppetAgentVersion
         [string]
         $URI = 'http://downloads.puppetlabs.com/windows/',
 
-        # The major version of Puppet to find the latest versions for
+        # The major version(s) of Puppet to find the latest versions for
         [Parameter(Mandatory = $true, Position = 1)]
-        [int]
+        [int[]]
         $MajorVersion,
 
         # The architecture to get
@@ -40,7 +40,7 @@ function Get-LatestWindowsPuppetAgentVersion
     
     begin
     {
-
+        $Return = @()
     }
     
     process
@@ -51,46 +51,60 @@ function Get-LatestWindowsPuppetAgentVersion
         #>
         try
         {
-            <# 
-                Sometimes we can end up with this being an empty value due to weird PowerShell reasons.
-                We can't validate on the param because it's an int, so we do so here.
-                We also check that it's not below 3 as those binaries don't exist in repository.
-            #>
-            if ((!$MajorVersion) -or ($MajorVersion -lt 5))
+            foreach ($Version in $MajorVersion)
             {
-                Write-Error "MajorVersion is not set to a valid value. ($MajorVersion)"
+                <# 
+                    Sometimes we can end up with this being an empty value due to weird PowerShell reasons.
+                    We can't validate on the param because it's an int, so we do so here.
+                    We also check that it's not below 5 as those binaries don't exist in repository.
+                #>
+                if ((!$Version) -or ($Version -lt 5))
+                {
+                    Write-Error "MajorVersion is not set to a valid value. ($Version)"
+                }
+                $MajorURI = $URI + "puppet$Version"
+                Write-Debug "URI is: $MajorURI"
+                $PuppetAgentVersions = (Invoke-WebRequest $MajorURI -ErrorAction 'Stop').Links | 
+                    Where-Object { $_.href -like "puppet-agent-*-$Arch.msi" } | 
+                        Select-Object -ExpandProperty href | ForEach-Object {
+                            if ($_.ToLower() -match '^puppet-agent-([\d\.]*)')
+                            {
+                                [version]$Matches[1]
+                            }
+                            else
+                            {
+                                Write-Debug "'$_' does not appear to match a version number"
+                            }
+                        }
+                if (!$PuppetAgentVersions)
+                {
+                    throw 'Failed to find any matching Puppet versions.'
+                }
+                else
+                {
+                    Write-Debug "Got versions:`n$PuppetAgentVersions"
+                }
+                # Finally sort the object, select the last entry and convert it to a string
+                $LatestVersion = ($PuppetAgentVersions | Sort-Object | Select-Object -Last 1).ToString()
+                if ($LatestVersion)
+                {
+                    Write-Debug "Determined latest version to be $LatestVersion"
+                    $Return += $LatestVersion
+                }
             }
-            $MajorURI = $URI + "puppet$MajorVersion"
-            $PuppetAgentVersions = (Invoke-WebRequest $MajorURI -ErrorAction 'Stop').Links | 
-                Where-Object { $_.href -like "puppet-agent-*-$Arch.msi" } | 
-                    Select-Object -ExpandProperty href | ForEach-Object {
-                        if ($_.ToLower() -match '^puppet-agent-([\d\.]*)')
-                        {
-                            [version]$Matches[1]
-                        }
-                        else
-                        {
-                            Write-Debug "'$_' does not appear to match a version number"
-                        }
-                    }
         }
         catch
         {
             throw "Failed to query Puppet agent downloads.$($_.Exception.Message)"
         }
-        if (!$PuppetAgentVersions)
-        {
-            throw 'Failed to find any matching Puppet versions.'
-        }
-        # Finally sort the object, select the last entry and convert it to a string
-        $LatestVersion = ($PuppetAgentVersions | Sort-Object | Select-Object -Last 1).ToString()
+        
     }
     
     end
     {
-        if ($LatestVersion)
+        if ($Return -ne @())
         {
-            return $LatestVersion
+            return $Return
         }
         else
         {
