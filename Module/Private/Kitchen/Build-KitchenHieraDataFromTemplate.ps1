@@ -30,7 +30,7 @@ function Build-KitchenHieraDataFromTemplate
         # The directory that houses the template files
         [Parameter(Mandatory = $false)]
         [string]
-        $TemplateDirectory = (Join-Path $global:PuppetTemplateDirectory 'kitchen' 'hieradata')
+        $TemplateDirectory = (Join-Path $Script:PuppetTemplateDirectory 'kitchen' 'hieradata')
     )
     
     begin

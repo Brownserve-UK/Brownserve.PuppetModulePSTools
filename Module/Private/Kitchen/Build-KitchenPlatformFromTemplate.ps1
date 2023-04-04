@@ -40,7 +40,7 @@ function Build-KitchenPlatformFromTemplate
         # The directory the template files live in
         [Parameter(Mandatory = $false)]
         [string]
-        $TemplateDirectory = (Join-Path $global:PuppetTemplateDirectory 'kitchen' 'platforms'),
+        $TemplateDirectory = (Join-Path $Script:PuppetTemplateDirectory 'kitchen' 'platforms'),
 
         # The template file to use for creating the platform, these should live in the template directory specified above
         [Parameter(Mandatory = $false)]

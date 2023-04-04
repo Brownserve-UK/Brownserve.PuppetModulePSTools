@@ -41,7 +41,7 @@ function Build-KitchenSuiteFromTemplate
         # The directory that houses the template files
         [Parameter(Mandatory = $false)]
         [string]
-        $TemplateDirectory = (Join-Path $global:PuppetTemplateDirectory 'kitchen' 'suites'),
+        $TemplateDirectory = (Join-Path $Script:PuppetTemplateDirectory 'kitchen' 'suites'),
 
         # Special hidden parameter for when we know what we're doing.
         # We don't support piping as it applies param validation in the process block which is too late when

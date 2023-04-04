@@ -36,7 +36,7 @@ Join-Path $PSScriptRoot -ChildPath 'Public' |
 # Place any custom code for your module ONLY in the space below
 # this will ensure it is preserved when the module is updated using Update-BrownservePowerShellModule
 ### Start user defined module steps
-
+$Script:PuppetTemplateDirectory = Join-Path $PrivatePath 'templates'
 ### End user defined module steps
 
 <# 

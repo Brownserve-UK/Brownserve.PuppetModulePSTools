@@ -33,7 +33,7 @@ function Build-PuppetModuleManifestFromTemplate
         # The path to where templates are stored
         [Parameter(Mandatory = $false)]
         [string]
-        $TemplatePath = (Join-Path $global:PuppetTemplateDirectory 'manifests'),
+        $TemplatePath = (Join-Path $Script:PuppetTemplateDirectory 'manifests'),
 
         # The template to be used for this module
         [Parameter(Mandatory = $false, Position = 1)]
