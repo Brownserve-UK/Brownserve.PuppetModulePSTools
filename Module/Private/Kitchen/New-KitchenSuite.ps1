@@ -23,6 +23,16 @@ function New-KitchenSuite
         [string]
         $SpecExecCommand = 'rspec -c -f d -I spec',
 
+        # An optional list of platforms that this suite should include
+        [Parameter(Mandatory = $false)]
+        [array]
+        $Includes,
+
+        # An optional list of platforms that this suite should exclude
+        [Parameter(Mandatory = $false)]
+        [array]
+        $Excludes,
+
         # The indentation to use for the returned YAML
         [Parameter(Mandatory = $false)]
         [int]
@@ -42,13 +52,21 @@ function New-KitchenSuite
         }
 
         $SuiteHash = @(
-                @{
+                [ordered]@{
                     name     = $SuiteName
                     verifier = @{
                         command = ($SpecExecCommand + ' ' + $SpecFileRelativePath + $SpecFileName)
                     }
                 }
             )
+        if ($Includes)
+        {
+            $SuiteHash[0].Add('includes',$Includes)
+        }
+        if ($Excludes)
+        {
+            $SuiteHash[0].Add('excludes',$Excludes)
+        }
         try
         {
             $SuiteYaml = $SuiteHash | ConvertTo-Yaml -KeepArray -ErrorAction 'Stop'
