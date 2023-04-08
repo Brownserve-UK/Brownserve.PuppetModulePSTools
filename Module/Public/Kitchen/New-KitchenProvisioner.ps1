@@ -106,7 +106,12 @@ function New-KitchenProvisioner
         # Whether or not to perform no-op's
         [Parameter(Mandatory = $false)]
         [bool]
-        $PuppetNoOp = $false
+        $PuppetNoOp = $false,
+
+        # Allows returning as a hashtable instead for reasons
+        [Parameter(Mandatory = $false)]
+        [switch]
+        $AsHashtable
     )
     
     begin
