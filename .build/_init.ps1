@@ -86,20 +86,20 @@ $global:BrownserveRepoBinaryDirectory = $BrownserveRepoBinaryDirectory | Convert
 
 
 # We use paket for managing our dependencies and we get that via dotnet
-Write-Verbose "Restoring dotnet tools"
+Write-Verbose 'Restoring dotnet tools'
 $DotnetOutput = & dotnet tool restore
 if ($LASTEXITCODE -ne 0)
 {
     $DotnetOutput
-    throw "dotnet tool restore failed"
+    throw 'dotnet tool restore failed'
 }
 
-Write-Verbose "Installing paket dependencies"
+Write-Verbose 'Installing paket dependencies'
 $PaketOutput = & dotnet paket install
 if ($LASTEXITCODE -ne 0)
 {
     $PaketOutput
-    throw "Failed to install paket dependencies"
+    throw 'Failed to install paket dependencies'
 }
 
 # If Brownserve.PSTools is already loaded in this session (e.g. it's installed globally) we need to unload it
@@ -108,7 +108,7 @@ if ((Get-Module 'Brownserve.PSTools'))
 {
     try
     {
-        Write-Verbose "Unloading Brownserve.PSTools"
+        Write-Verbose 'Unloading Brownserve.PSTools'
         Remove-Module 'Brownserve.PSTools' -Force -Confirm:$false
     }
     catch
@@ -119,7 +119,7 @@ if ((Get-Module 'Brownserve.PSTools'))
 # Import the downloaded version of Brownserve.PSTools
 try
 {
-    Write-Verbose "Importing Brownserve.PSTools module"
+    Write-Verbose 'Importing Brownserve.PSTools module'
     Import-Module (Join-Path $Global:BrownserveRepoNugetPackagesDirectory 'Brownserve.PSTools' 'tools', 'Brownserve.PSTools.psd1') -Force -Verbose:$false
 }
 catch
@@ -130,7 +130,7 @@ catch
 # Find and load any custom PowerShell modules we've written for this repo
 try
 {
-    Get-ChildItem $global:BrownserveRepoCodeDirectory -Filter '*.psm1' -Recurse | Foreach-Object {
+    Get-ChildItem $global:BrownserveRepoCodeDirectory -Filter '*.psm1' -Recurse | ForEach-Object {
         Import-Module $_ -Force -Verbose:$false
     }
 }
@@ -141,7 +141,43 @@ catch
 
 # Place any custom code below, this will be preserved whenever you update your _init script
 ### Start user defined _init steps
-
+$Global:BrownserveRepoModulePath = Join-Path $Global:BrownserveRepoRootDirectory 'Module' 'Brownserve.PuppetModulePSTools.psm1'
+$PowerShellYaml = Get-Module 'powershell-yaml' -ListAvailable
+if (!$PowerShellYaml)
+{
+    Write-Verbose 'powershell-yaml not available locally, downloading'
+    try
+    {
+        Save-Module `
+            -Name 'powershell-yaml' `
+            -Repository PSGallery `
+            -Path $Global:BrownserveRepoNugetPackagesDirectory `
+            -Force `
+            -ErrorAction 'Stop'
+        $PowerShellYaml = Join-Path $Global:BrownserveRepoNugetPackagesDirectory 'powershell-yaml' 'powershell-yaml.psd1'
+    
+    }
+    catch
+    {
+        throw "Failed to download powershell-yaml module.`n$($_.Exception.Message)"
+    }
+}
+try
+{
+    Import-Module $PowerShellYaml -Force -ErrorAction 'Stop'
+}
+catch
+{
+    throw "Failed to import powershell-yaml module.`n$($_.Exception.Message)"
+}
+try
+{
+    Import-Module $Global:BrownserveRepoModulePath -Force -ErrorAction 'Stop'
+}
+catch
+{
+    throw "Failed to import Brownserve.PuppetModulePSTools.`n$($_.Exception.Message)"
+}
 ### End user defined _init steps
 
 # If we're not suppressing output then we'll pipe out a list of cmdlets that are now available to the user along with
