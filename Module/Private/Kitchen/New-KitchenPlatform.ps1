@@ -60,7 +60,7 @@ function New-KitchenPlatform
         }
         try
         {
-            $ProvisionerTemplate = $YAMLHash | ConvertTo-Yaml
+            $PlatformTemplate = $YAMLHash | ConvertTo-Yaml
         }
         catch
         {
@@ -68,18 +68,18 @@ function New-KitchenPlatform
         }
         if ($Indentation -gt 0)
         {
-            $ProvisionerYAMLArray = $ProvisionerTemplate -split "`n"
-            Clear-Variable 'ProvisionerTemplate'
+            $ProvisionerYAMLArray = $PlatformTemplate -split "`n"
+            Clear-Variable 'PlatformTemplate'
             $Line = 0
             $ProvisionerYAMLArray | ForEach-Object {
                 $Line += 1
                 if ($Line -eq $ProvisionerYAMLArray.Count)
                 {
-                    $ProvisionerTemplate += ' ' * $Indentation + $_ + "`r"
+                    $PlatformTemplate += ' ' * $Indentation + $_ + "`r"
                 }
                 else
                 {
-                    $ProvisionerTemplate += ' ' * $Indentation + $_ + "`n`r"
+                    $PlatformTemplate += ' ' * $Indentation + $_ + "`n`r"
                 }
             }
         }
@@ -88,9 +88,9 @@ function New-KitchenPlatform
     
     end
     {
-        if ($ProvisionerTemplate)
+        if ($PlatformTemplate)
         {
-            return $ProvisionerTemplate
+            return $PlatformTemplate
         }
         else
         {
