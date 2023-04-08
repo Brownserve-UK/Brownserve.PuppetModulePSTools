@@ -33,8 +33,13 @@ function New-KitchenPlatform
         [hashtable]
         $ProvisionerOptions,
 
-        # The indentation to use for the returned YAML
+        # If set returns the object as a Hashtable instead of as YAML
         [Parameter(Mandatory = $false)]
+        [switch]
+        $AsHashtable,
+
+        # The indentation to use for the returned YAML
+        [Parameter(Mandatory = $false, DontShow)]
         [int]
         $Indentation = 2
     )
@@ -65,34 +70,40 @@ function New-KitchenPlatform
         }
         if ($TransportMethod)
         {
-            $YAMLHash[0].Add('transport',@{name = $TransportMethod})
+            $YAMLHash[0].Add('transport', @{name = $TransportMethod })
         }
-        try
+        if ($AsHashtable)
         {
-            $PlatformTemplate = $YAMLHash | ConvertTo-Yaml
+            $PlatformTemplate = $YAMLHash
         }
-        catch
+        else
         {
-            throw "Failed to convert object into YAML.`n$($_.Exception.Message)"
-        }
-        if ($Indentation -gt 0)
-        {
-            $ProvisionerYAMLArray = $PlatformTemplate -split "`n"
-            Clear-Variable 'PlatformTemplate'
-            $Line = 0
-            $ProvisionerYAMLArray | ForEach-Object {
-                $Line += 1
-                if ($Line -eq $ProvisionerYAMLArray.Count)
-                {
-                    $PlatformTemplate += ' ' * $Indentation + $_ + "`r"
-                }
-                else
-                {
-                    $PlatformTemplate += ' ' * $Indentation + $_ + "`n`r"
+            try
+            {
+                $PlatformTemplate = $YAMLHash | ConvertTo-Yaml
+            }
+            catch
+            {
+                throw "Failed to convert object into YAML.`n$($_.Exception.Message)"
+            }
+            if ($Indentation -gt 0)
+            {
+                $ProvisionerYAMLArray = $PlatformTemplate -split "`n"
+                Clear-Variable 'PlatformTemplate'
+                $Line = 0
+                $ProvisionerYAMLArray | ForEach-Object {
+                    $Line += 1
+                    if ($Line -eq $ProvisionerYAMLArray.Count)
+                    {
+                        $PlatformTemplate += ' ' * $Indentation + $_ + "`r"
+                    }
+                    else
+                    {
+                        $PlatformTemplate += ' ' * $Indentation + $_ + "`n`r"
+                    }
                 }
             }
         }
-
     }
     
     end
