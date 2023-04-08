@@ -13,6 +13,11 @@ function New-KitchenPlatform
         [KitchenDriver]
         $DriverPlugin = 'vagrant',
 
+        # An optional transport method to be used
+        [Parameter(Mandatory = $false)]
+        [string]
+        $TransportMethod,
+
         # Any additional driver config options
         [Parameter(Mandatory = $false)]
         [hashtable]
@@ -57,6 +62,10 @@ function New-KitchenPlatform
         if ($ProvisionerOptions)
         {
             $YAMLHash[0].Add('provisioner', $ProvisionerOptions)
+        }
+        if ($TransportMethod)
+        {
+            $YAMLHash[0].Add('transport',@{name = $TransportMethod})
         }
         try
         {
