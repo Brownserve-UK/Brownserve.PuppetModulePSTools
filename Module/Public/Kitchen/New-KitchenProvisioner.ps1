@@ -3,6 +3,11 @@ function New-KitchenProvisioner
     [CmdletBinding()]
     param
     (
+        # The name of the main manifest to run
+        [Parameter(Mandatory = $true)]
+        [string]
+        $ManifestName,
+
         # The name of the provisioner
         [Parameter(Mandatory = $false)]
         [string]
@@ -12,11 +17,6 @@ function New-KitchenProvisioner
         [Parameter(Mandatory = $false)]
         [string]
         $ManifestPath = 'spec/manifests',
-
-        # The name of the main manifest to run
-        [Parameter(Mandatory = $true)]
-        [string]
-        $ManifestName,
 
         # The path to any external modules that should be loaded (relative to .kitchen.yml)
         [Parameter(Mandatory = $false)]
