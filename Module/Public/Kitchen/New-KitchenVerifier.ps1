@@ -30,6 +30,7 @@ function New-KitchenVerifier
         {
             $VerifierYAML = $VerifierHash
         }
+        else
         {
             try
             {

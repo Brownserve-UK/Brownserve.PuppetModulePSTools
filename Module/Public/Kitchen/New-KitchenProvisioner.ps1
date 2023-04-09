@@ -41,7 +41,7 @@ function New-KitchenProvisioner
         # Any custom facts that should be injected into the apply
         [Parameter(Mandatory = $false)]
         [hashtable]
-        $CustomFacts = @{'integration_tests' = $true },
+        $CustomFacts = @{'ci_cd' = $true },
 
         # Any paths that should be ignored
         [Parameter(Mandatory = $false)]
@@ -126,8 +126,8 @@ function New-KitchenProvisioner
             $ManifestName = $ManifestName + '.pp'
         }
         # Form a hash from all the options that must be set
-        $ProvisionerHash = @{
-            name                          = $SuiteName
+        $ProvisionerHash = [ordered]@{
+            name                          = $ProvisionerName
             manifests_path                = $ManifestPath
             manifest                      = $ManifestName
             hiera_data_path               = $HieraDataPath
