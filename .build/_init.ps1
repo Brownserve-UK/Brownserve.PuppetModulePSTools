@@ -154,8 +154,11 @@ if (!$PowerShellYaml)
             -Path $Global:BrownserveRepoNugetPackagesDirectory `
             -Force `
             -ErrorAction 'Stop'
-        $PowerShellYaml = Join-Path $Global:BrownserveRepoNugetPackagesDirectory 'powershell-yaml' 'powershell-yaml.psd1'
-    
+        $PowerShellYaml = Get-ChildItem (Join-Path $Global:BrownserveRepoNugetPackagesDirectory 'powershell-yaml') -Filter 'powershell-yaml.psd1' -Recurse
+        if (!$PowerShellYaml)
+        {
+            Write-Error "Failed to find powershell-yaml module after download."
+        }
     }
     catch
     {
