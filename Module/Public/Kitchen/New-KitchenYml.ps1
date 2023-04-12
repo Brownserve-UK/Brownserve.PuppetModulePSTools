@@ -42,7 +42,7 @@ function New-KitchenYml
             $Platform = $PlatformOptions | ForEach-Object {
                 New-KitchenPlatform @_ -AsHashtable -ErrorAction 'Stop'
             }
-            $KitchenHash = @{
+            $KitchenHash = [ordered]@{
                 provisioner = $Provisioner
                 verifier = $Verifier
                 suites = $Suite
