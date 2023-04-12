@@ -163,13 +163,20 @@ function New-KitchenProvisioner
             $ProvisionerHash.Add('custom_facts', $CustomFacts)
         }
 
-        try
+        if ($AsHashtable)
         {
-            $ProvisionerYaml = $ProvisionerHash | ConvertTo-Yaml -ErrorAction 'Stop' 
+            $ProvisionerYaml = $ProvisionerHash
         }
-        catch
+        else
         {
-            throw "Failed to create provisioner YAML.`n$($_.Exception.Message)"
+            try
+            {
+                $ProvisionerYaml = $ProvisionerHash | ConvertTo-Yaml -ErrorAction 'Stop' 
+            }
+            catch
+            {
+                throw "Failed to create provisioner YAML.`n$($_.Exception.Message)"
+            }
         }
     }
     
