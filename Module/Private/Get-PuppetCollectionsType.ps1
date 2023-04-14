@@ -4,7 +4,11 @@ function Get-PuppetCollectionsType
     param
     (
         # The uri to the Puppet collections repo
-        [Parameter(Mandatory = $true)]
+        [Parameter(
+            Mandatory = $true,
+            Position = 0,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true)]
         [string]
         $CollectionsRepoURI
     )
@@ -18,7 +22,7 @@ function Get-PuppetCollectionsType
     {
         try
         {
-            $RepoInfo = $CollectionsRepoURI | ConvertFrom-URI
+            $RepoInfo = $CollectionsRepoURI | ConvertFrom-URI -ErrorAction 'Stop'
         }
         catch
         {
