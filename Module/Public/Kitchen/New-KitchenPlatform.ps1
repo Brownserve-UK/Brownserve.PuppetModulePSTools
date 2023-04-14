@@ -51,20 +51,21 @@ function New-KitchenPlatform
     process
     {
         $YAMLHash = @(
-            @{
+            [ordered]@{
                 name          = $PlatformName
                 driver_plugin = $DriverPlugin
             }
         )
-        if ($DriverConfigOptions)
-        {
-            $YAMLHash[0].Add('driver_config', $DriverConfigOptions)
-        }
         if ($DriverOptions)
         {
             $YAMLHash[0].Add('driver', $DriverOptions)
         }
-        if ($ProvisionerOptions)
+        # Empty hashtables still seem to get picked up and end up in the YAML. Looks messy so only add them if they contain something
+        if ($DriverConfigOptions.Count -ne 0)
+        {
+            $YAMLHash[0].Add('driver_config', $DriverConfigOptions)
+        }
+        if ($ProvisionerOptions.Count -ne 0)
         {
             $YAMLHash[0].Add('provisioner', $ProvisionerOptions)
         }
