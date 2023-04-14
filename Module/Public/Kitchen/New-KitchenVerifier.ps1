@@ -22,9 +22,7 @@ function New-KitchenVerifier
     process
     {
         $VerifierHash = @{
-            verifier = @{
-                name = $Verifier
-            }
+            name = $Verifier
         }
         if ($AsHashtable)
         {
