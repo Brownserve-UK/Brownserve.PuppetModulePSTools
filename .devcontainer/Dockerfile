@@ -22,6 +22,8 @@ RUN dpkg -i packages-microsoft-prod.deb
 RUN apt-get update
 # Enable the "universe" repositories
 RUN add-apt-repository universe
+# Update the list of products
+RUN apt-get update
 # Install PowerShell
 RUN apt-get install -y powershell
 
