@@ -1,3 +1,0 @@
-  - name: <SUITE_NAME>
-    verifier:
-      command: rspec -c -f d -I spec spec/acceptance/<SPEC_FILE>
