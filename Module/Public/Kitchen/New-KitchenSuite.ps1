@@ -16,7 +16,7 @@ function New-KitchenSuite
         # The path (relative to .kitchen.yml) to where the suite manifest will live
         [Parameter(Mandatory = $false, Position = 2)]
         [string]
-        $SpecFileRelativePath = 'spec/acceptance/',
+        $SpecFileRelativePath = 'spec/acceptance',
 
         # The execution command to run for this suite
         [Parameter(Mandatory = $false, Position = 3)]
@@ -46,7 +46,10 @@ function New-KitchenSuite
     
     begin
     {
-        
+        if ($SpecFileRelativePath -notmatch '\/$')
+        {
+            $SpecFileRelativePath += '/'
+        }
     }
     
     process
