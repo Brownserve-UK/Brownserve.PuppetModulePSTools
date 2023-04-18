@@ -8,6 +8,11 @@ function New-PuppetClass
         [string]
         $Name,
 
+        # The module that this class belongs to
+        [Parameter(Mandatory = $true)]
+        [string]
+        $ModuleName,
+
         # An optional description of the class
         [Parameter(Mandatory = $false)]
         [string[]]
@@ -16,12 +21,22 @@ function New-PuppetClass
         # Optional content to include in the class
         [Parameter(Mandatory = $false)]
         [string[]]
-        $Content
+        $Content,
+
+        # If this is a private class or not
+        [Parameter(Mandatory = $false)]
+        [switch]
+        $Private
     )
     
     begin
     {
         $Name = $Name.ToLower()
+        $ModuleName = $ModuleName.ToLower()
+        if ($Name -notlike "*$ModuleName*")
+        {
+            $Name = "$ModuleName::$Name"
+        }
     }
     
     process
@@ -32,6 +47,10 @@ function New-PuppetClass
             $Description | ForEach-Object {
                 $ClassContent += "#   $_`n"
             }
+        }
+        if ($Private)
+        {
+            $ClassContent += "# @api private`n"
         }
         $ClassContent += "class $Name`n"
         $ClassContent += "()`n" # Parameters currently out of scope, maybe in the future
