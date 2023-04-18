@@ -55,7 +55,7 @@ function Add-BrownserveModuleHiera
         try
         {
             $HieraYamlPath = Join-Path $ModulePath 'hiera.yaml'
-            New-Item $HieraYamlPath -Value $HieraContent -ErrorAction 'Stop'
+            New-Item $HieraYamlPath -Value $HieraContent -ErrorAction 'Stop' | Out-Null
         }
         catch
         {
@@ -63,7 +63,7 @@ function Add-BrownserveModuleHiera
         }
         try
         {
-            New-Item $DataDirectoryPath -ItemType Directory -ErrorAction 'stop'
+            New-Item $DataDirectoryPath -ItemType Directory -ErrorAction 'stop' | Out-Null
         }
         catch
         {
@@ -75,7 +75,7 @@ function Add-BrownserveModuleHiera
                 # Only create files that are not interpolated from facts or other values as we can't guess these names easily
                 if ($_ -notmatch ('^\%'))
                 {
-                    New-Item (Join-Path $DataDirectoryPath $_) -Value "---`n" -ErrorAction 'stop'
+                    New-Item (Join-Path $DataDirectoryPath $_) -Value "---`n" -ErrorAction 'stop' | Out-Null
                 }
             }
         }
