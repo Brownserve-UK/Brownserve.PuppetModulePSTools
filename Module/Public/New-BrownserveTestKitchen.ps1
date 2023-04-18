@@ -23,6 +23,11 @@ function New-BrownserveTestKitchen
         [array]
         $SupportedOS,
 
+        # Any content to add to the hiera data file
+        [Parameter(Mandatory = $false)]
+        [string]
+        $HieraContent,
+
         # The configuration file to use
         [Parameter(Mandatory = $false)]
         [string]
@@ -97,7 +102,11 @@ function New-BrownserveTestKitchen
         $TestHieraDirectoryRelativePath = "$SpecRelativePath/hieradata"
         $TestHieraDirectoryAbsolutePath = Join-Path $SpecAbsolutePath 'hiera'
         $TestHieraPath = Join-Path $TestHieraDirectoryAbsolutePath 'common.yaml'
-        $TestHieraContent = "---`n# This is your hiera file, put any parameter values and such in here"
+        $TestHieraContent = "---`n# This is your hiera file, put any parameter values and such in here`n"
+        if ($HieraContent)
+        {
+            $TestHieraContent += $HieraContent
+        }
 
         <# 
             The provisioner options will set the main things in the provisioner section of .kitchen.yml
