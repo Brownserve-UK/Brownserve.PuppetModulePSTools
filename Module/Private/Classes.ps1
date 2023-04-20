@@ -29,18 +29,21 @@ enum TestProvider
     kitchen_vagrant
 }
 
+# This ensures we can easily check what type of module we're creating
 enum PuppetModuleType
 {
     private
     public
 }
 
+# Standardise what type of kernel we are testing against
 enum TestOSKernel
 {
     linux
     windows
 }
 
+# Supported kitchen drivers
 enum KitchenDriver
 {
     vagrant
