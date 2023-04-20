@@ -23,6 +23,11 @@ function New-BrownservePuppetModule
         [PuppetModuleType]
         $ModuleType,
 
+        # The supported operating systems
+        [Parameter(Mandatory = $true)]
+        [string[]]
+        $SupportedOS,
+
         # The author of the module
         [Parameter(Mandatory = $false)]
         [string]
@@ -51,11 +56,27 @@ function New-BrownservePuppetModule
         # Forces the creation of the module even if it exists
         [Parameter(Mandatory = $false)]
         [switch]
-        $Force
+        $Force,
+
+        # The configuration file to use
+        [Parameter(Mandatory = $false, DontShow)]
+        [string]
+        $ConfigurationFile = (Join-Path $PSScriptRoot 'configuration.jsonc')
     )
     
     begin
     {
+        if (!$Configuration)
+        {
+            try
+            {
+                $Configuration = Get-Content $ConfigurationFile | ConvertFrom-Json -AsHashtable
+            }
+            catch
+            {
+                throw "Failed to load configuration.`n$($_.Exception.Message)"
+            }
+        }
         if (!$ModuleRequirements)
         {
             # Forge modules _must_ have the upper version number set, if it's not then it'll be added automatically and it may impact the modules score.
@@ -73,6 +94,8 @@ function New-BrownservePuppetModule
     
     process
     {
+        $OSVersions = @{}
+        $SanitizedSupportedOS = @()
         $ModuleName = $ModuleName.ToLower() # In the future might be good to filter this to allowed Puppet characters too
         # Ensure the module doesn't already exists
         $ModuleAbsolutePath = Join-Path $Path $ModuleName
@@ -81,6 +104,61 @@ function New-BrownservePuppetModule
             if (Test-Path $ModuleAbsolutePath)
             {
                 throw "Module already exists at '$ModuleAbsolutePath'."
+            }
+        }
+        
+        foreach ($OS in $SupportedOS)
+        {
+            try
+            {
+                # try and sanitize the name for the forge
+                switch -wildcard ($OS)
+                {
+                    # We may have ubuntu and ubuntu-desktop
+                    'ubuntu'
+                    {
+                        $OSName = 'ubuntu'
+                    }
+                    # We may have windows-desktop, windows-server etc
+                    'windows'
+                    {
+                        $OSName = 'windows'
+                    }
+                    Default
+                    {
+                        # Unknown OS just assume it's correct
+                        $OSName = $OS
+                    }
+                }
+                if ($OSVersions.Keys -notcontains $OSName)
+                {
+                    $OSVersions.Add($OSName,@())
+                }
+                $Details = $Configuration | Select-Object -ExpandProperty $OS -ErrorAction 'SilentlyContinue'
+                if (!$Details)
+                {
+                    throw "No operating system matching '$OS' found in configuration."
+                }
+                $Releases = $Details | Select-Object -ExpandProperty Releases -ErrorAction 'SilentlyContinue'
+                if (!$Releases)
+                {
+                    throw "No releases found for OS '$OS'."
+                }
+                $ReleaseVersions = $Releases.Values | Select-Object -ExpandProperty ReleaseVersion -ErrorAction 'SilentlyContinue'
+                if (!$ReleaseVersions)
+                {
+                    throw "Unable to find release versions for OS '$OS'."
+                }
+                $ReleaseVersions | ForEach-Object {
+                    if ($OSVersions.$OSName -notcontains $_)
+                    {
+                        $OSVersions.$OSName += $_
+                    }
+                }
+            }
+            catch
+            {
+                throw "$($_.Exception.Message)"
             }
         }
         $ManifestDirectory = Join-Path $ModuleAbsolutePath 'manifests'
@@ -124,13 +202,19 @@ function New-BrownservePuppetModule
         }
         try
         {
+            $OSVersions.GetEnumerator() | ForEach-Object {
+                $SanitizedSupportedOS += [ordered]@{
+                    operatingsystem = $_.Key
+                    operatingsystemrelease = $_.Value
+                }
+            }
             $Metadata = New-PuppetModuleMetadata `
                 -ModuleName $ModuleName `
                 -ForgeUsername $ForgeUsername `
                 -ModuleAuthor $ModuleAuthor `
-                -ModuleSummary ($Description.ToString()) `
+                -ModuleSummary ($Description | Out-String -NoNewline) `
                 -License $ModuleLicense `
-                -SupportedOS @{} `
+                -SupportedOS $SanitizedSupportedOS `
                 -Requirements $ModuleRequirements `
                 -ErrorAction 'Stop'
             if (!$Metadata)
