@@ -31,8 +31,8 @@ enum TestProvider
 
 enum PuppetModuleType
 {
-    standalone
-    environment
+    private
+    public
 }
 
 enum TestOSKernel
