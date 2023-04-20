@@ -30,7 +30,7 @@ function New-PuppetModuleMetadata
 
         # The supported OSes
         [Parameter(Mandatory = $true)]
-        [hashtable[]]
+        [ordered[]]
         $SupportedOS,
 
         # The requirements of the module
@@ -75,7 +75,7 @@ function New-PuppetModuleMetadata
         }
         try
         {
-            $JSON = $Hash | ConvertTo-Json
+            $JSON = $Hash | ConvertTo-Json -Depth 100
         }
         catch
         {
