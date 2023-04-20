@@ -18,6 +18,31 @@ function New-BrownservePuppetModule
         [string[]]
         $Description,
 
+        # The type of module to be created, public (forge) or private (environment)
+        [Parameter(Mandatory = $true)]
+        [PuppetModuleType]
+        $ModuleType,
+
+        # The author of the module
+        [Parameter(Mandatory = $false)]
+        [string]
+        $ModuleAuthor = [Environment]::UserName,
+
+        # The account that uploads this module to the forge
+        [Parameter(Mandatory = $false)]
+        [string]
+        $ForgeUsername = 'brownserve',
+
+        # The license to use for this module
+        [Parameter(Mandatory = $false)]
+        [string]
+        $ModuleLicense = 'mit',
+
+        # The requirements for this module
+        [Parameter(Mandatory = $false)]
+        [hashtable[]]
+        $ModuleRequirements,
+
         # Whether to include a params class
         [Parameter(Mandatory = $false)]
         [bool]
@@ -31,12 +56,24 @@ function New-BrownservePuppetModule
     
     begin
     {
-        
+        if (!$ModuleRequirements)
+        {
+            # Forge modules _must_ have the upper version number set, if it's not then it'll be added automatically and it may impact the modules score.
+            $PuppetUpperVersion = 8
+            if ($script:DefaultPuppetMajorVersion -eq $PuppetUpperVersion)
+            {
+                throw 'Cannot automatically set Puppet version requirements'
+            }
+            $ModuleRequirements = @{
+                name                = 'puppet'
+                version_requirement = ">= $script:DefaultPuppetMajorVersion.0.0 < 8.0.0"
+            }
+        }
     }
     
     process
     {
-        $ModuleName = $ModuleName.ToLower() # In the future might be good to filter this to allowed Puppet characters
+        $ModuleName = $ModuleName.ToLower() # In the future might be good to filter this to allowed Puppet characters too
         # Ensure the module doesn't already exists
         $ModuleAbsolutePath = Join-Path $Path $ModuleName
         if ($Force -ne $true)
@@ -85,6 +122,26 @@ function New-BrownservePuppetModule
                 throw "Failed to generate params content.`n$($_.Exception.Message)"
             }
         }
+        try
+        {
+            $Metadata = New-PuppetModuleMetadata `
+                -ModuleName $ModuleName `
+                -ForgeUsername $ForgeUsername `
+                -ModuleAuthor $ModuleAuthor `
+                -ModuleSummary ($Description.ToString()) `
+                -License $ModuleLicense `
+                -SupportedOS @{} `
+                -Requirements $ModuleRequirements `
+                -ErrorAction 'Stop'
+            if (!$Metadata)
+            {
+                throw 'Empty metadata.'
+            }
+        }
+        catch
+        {
+            throw "Failed to create module metadata.`n$($_.Exception.Message)"
+        }
 
         # Now that everything has been done we can create the module
         try
@@ -125,6 +182,15 @@ function New-BrownservePuppetModule
             {
                 throw "Failed to create params.pp`n$($_.Exception.Message)"
             }        
+        }
+
+        try
+        {
+            New-Item (Join-Path $ModuleAbsolutePath 'metadata.json') -Value $Metadata -ErrorAction 'Stop' -Force:$Force | Out-Null
+        }
+        catch
+        {
+            throw "Failed to create metadata.json.`n$($_.Exception.Message)"
         }
     }
     
