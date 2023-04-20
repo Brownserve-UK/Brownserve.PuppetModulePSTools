@@ -127,11 +127,11 @@ function New-BrownserveTestKitchen
         # Set various things depending on whether this is a module that lives under our mono repo or is a standalone module
         switch ($ModuleType)
         {
-            'standalone'
+            'public'
             {
                 $SpecHelperPath = '../'
             }
-            'environment'
+            'private'
             {
                 $SpecHelperPath = '../../../../'
             }
