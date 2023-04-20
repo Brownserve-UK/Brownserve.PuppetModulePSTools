@@ -53,7 +53,7 @@ function New-PuppetClass
             $ClassContent += "# @api private`n"
         }
         $ClassContent += "class $Name"
-        $ClassContent += " ()" # Parameters currently out of scope, maybe in the future
+        $ClassContent += " () " # Parameters currently out of scope, maybe in the future
         $ClassContent += "{`n"
         if ($Content)
         {
