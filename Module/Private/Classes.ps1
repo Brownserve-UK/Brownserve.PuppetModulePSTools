@@ -71,7 +71,7 @@ class HieraHierarchy
     }
 }
 
-class BSPuppetModuleConfigurationReleaseDetails
+class BSPuppetModuleSupportedOSReleaseDetails
 {
     [string]$PuppetAgentURL
     [string]$ReleaseName
@@ -80,7 +80,7 @@ class BSPuppetModuleConfigurationReleaseDetails
     [string]$DockerImage
 
     # Constructor for converting a hashtable, this should be all we need when importing from JSON
-    BSPuppetModuleConfigurationReleaseDetails([hashtable]$Hashtable)
+    BSPuppetModuleSupportedOSReleaseDetails([hashtable]$Hashtable)
     {
         if (!$Hashtable.PuppetAgentURL)
         {
@@ -113,12 +113,12 @@ class BSPuppetModuleConfigurationReleaseDetails
 
 }
 
-class BSPuppetModuleConfigurationRelease
+class BSPuppetModuleSupportedOSRelease
 {
     [string]$Name
-    [BSPuppetModuleConfigurationReleaseDetails]$Settings
+    [BSPuppetModuleSupportedOSReleaseDetails]$Settings
 
-    BSPuppetModuleConfigurationRelease([hashtable]$Hashtable)
+    BSPuppetModuleSupportedOSRelease([hashtable]$Hashtable)
     {
         if (!$Hashtable.ReleaseName)
         {
@@ -129,21 +129,13 @@ class BSPuppetModuleConfigurationRelease
     }
 }
 
-<#
-    This class ensures that our configuration is in the format we expect it to be in
-#>
-class BSPuppetModuleConfiguration
+class BSPuppetModuleSupportedOSFamilyDetails
 {
-    [string]$OSFamily
     [string]$Kernel
-    [BSPuppetModuleConfigurationRelease[]]$Releases
+    [BSPuppetModuleSupportedOSRelease[]]$Releases
 
-    BSPuppetModuleConfiguration([hashtable]$Hashtable)
+    BSPuppetModuleSupportedOSFamilyDetails([hashtable]$Hashtable)
     {
-        if (!$Hashtable.OSFamily)
-        {
-            Write-Warning "Hashtable must contain the key 'OSFamily'"
-        }
         if (!$Hashtable.Kernel)
         {
             throw "Hashtable must contain the key 'Kernel'"
@@ -152,12 +144,42 @@ class BSPuppetModuleConfiguration
         {
             throw "Hashtable must contain the key 'Releases'"
         }
-        $this.OSFamily = 'testData_Remove'
         $this.Kernel = $Hashtable.Kernel
         $this.Releases = $Hashtable.Releases.GetEnumerator() | ForEach-Object {
             @{
                 ReleaseName = $_.Name
                 ReleaseSettings = $_.Value
+            }
+        }
+    }
+}
+
+class BSPuppetModuleSupportedOSFamily
+{
+    [String]$Name
+    [BSPuppetModuleSupportedOSFamilyDetails]$Details
+
+    BSPuppetModuleSupportedOSFamily([hashtable]$Hashtable)
+    {
+        if (!$Hashtable.OSFamily)
+        {
+            throw "Hashtable must contain the key 'OSFamily'"
+        }
+        $this.Name = $Hashtable.OSFamily
+        $this.Details = $Hashtable.Details
+    }
+}
+
+class BSPuppetModuleSupportedOSConfiguration
+{
+    [BSPuppetModuleSupportedOSFamily[]]$OSFamily
+
+    BSPuppetModuleSupportedOSConfiguration([hashtable]$Hashtable)
+    {
+        $Hashtable.GetEnumerator() | ForEach-Object {
+            $this.OSFamily += @{
+                OSFamily = $_.Key
+                Details = $_.Value
             }
         }
     }
