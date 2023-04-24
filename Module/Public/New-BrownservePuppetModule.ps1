@@ -140,8 +140,9 @@ function New-BrownservePuppetModule
                     $OSVersions.Add($OSName,@())
                 }
                 $Details = $Configuration | 
-                    Where-Object {$_.OSFamily -eq $OS } | 
-                        Select-Object -ExpandProperty Details -ErrorAction 'SilentlyContinue'
+                    Where-Object {$_.OSFamily.Name -eq $OS } | 
+                        Select-Object -ExpandProperty OSFamily -ErrorAction 'SilentlyContinue' |
+                            Select-Object -ExpandProperty Details -ErrorAction 'SilentlyContinue'
                 if (!$Details)
                 {
                     throw "No operating system matching '$OS' found in configuration."
