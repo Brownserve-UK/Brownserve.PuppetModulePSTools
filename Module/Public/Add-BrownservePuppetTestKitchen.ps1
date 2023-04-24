@@ -124,8 +124,8 @@ function Add-BrownservePuppetTestKitchen
         $ManifestContent = "include $ModuleName"
 
 
-        $TestHieraDirectoryRelativePath = "$SpecRelativePath/data"
-        $TestHieraDirectoryAbsolutePath = Join-Path $SpecAbsolutePath 'data'
+        $TestHieraDirectoryRelativePath = "$SpecRelativePath/hieradata"
+        $TestHieraDirectoryAbsolutePath = Join-Path $SpecAbsolutePath 'hieradata'
         $TestHieraPath = Join-Path $TestHieraDirectoryAbsolutePath 'common.yaml'
         $TestHieraContent = "---`n# This is your hiera file, put any parameter values and such in here`n"
         if ($HieraContent)
