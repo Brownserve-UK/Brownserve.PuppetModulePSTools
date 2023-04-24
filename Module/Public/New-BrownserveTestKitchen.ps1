@@ -36,7 +36,7 @@ function New-BrownserveTestKitchen
         # The configuration file to use
         [Parameter(Mandatory = $false, DontShow)]
         [string]
-        $ConfigurationFile = (Join-Path $PSScriptRoot 'configuration.jsonc')
+        $ConfigurationFile = $Script:SupportedOSConfigurationFile
     )
     
     begin

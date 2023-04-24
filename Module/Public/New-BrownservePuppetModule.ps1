@@ -61,21 +61,21 @@ function New-BrownservePuppetModule
         # The configuration to use
         [Parameter(Mandatory = $false)]
         [BSPuppetModuleSupportedOSConfiguration]
-        $Configuration,
+        $SupportedOSConfiguration,
 
         # The configuration file to use
         [Parameter(Mandatory = $false, DontShow)]
         [string]
-        $ConfigurationFile = (Join-Path $PSScriptRoot 'configuration.jsonc')
+        $ConfigurationFile = $Script:SupportedOSConfigurationFile
     )
     
     begin
     {
-        if (!$Configuration) #TODO: Rename this to something more appropriate
+        if (!$SupportedOSConfiguration) #TODO: Rename this to something more appropriate
         {
             try
             {
-                $Configuration = Get-Content $ConfigurationFile | ConvertFrom-Json -AsHashtable
+                $SupportedOSConfiguration = Get-Content $ConfigurationFile | ConvertFrom-Json -AsHashtable
             }
             catch
             {
@@ -139,7 +139,7 @@ function New-BrownservePuppetModule
                 {
                     $OSVersions.Add($OSName,@())
                 }
-                $Details = $Configuration | 
+                $Details = $SupportedOSConfiguration | 
                     Where-Object {$_.OSFamily.Name -eq $OS } | 
                         Select-Object -ExpandProperty OSFamily -ErrorAction 'SilentlyContinue' |
                             Select-Object -ExpandProperty Details -ErrorAction 'SilentlyContinue'
