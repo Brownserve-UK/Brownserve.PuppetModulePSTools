@@ -10,10 +10,12 @@ function New-BrownservePuppetModule
 
         # The path to where the module should be created
         [Parameter(Mandatory = $true)]
+        [Alias('Path','PSPath')]
         [string]
-        $Path,
+        $ModulePath,
 
         # An optional description for this module
+        # TODO: Make this mandatory for forge modules
         [Parameter(Mandatory = $false)]
         [string[]]
         $Description,
@@ -71,6 +73,7 @@ function New-BrownservePuppetModule
     
     begin
     {
+        $Return = @()
         if (!$SupportedOSConfiguration) #TODO: Rename this to something more appropriate
         {
             try
@@ -103,7 +106,7 @@ function New-BrownservePuppetModule
         $SanitizedSupportedOS = @()
         $ModuleName = $ModuleName.ToLower() # In the future might be good to filter this to allowed Puppet characters too
         # Ensure the module doesn't already exists
-        $ModuleAbsolutePath = Join-Path $Path $ModuleName
+        $ModuleAbsolutePath = Join-Path $ModulePath $ModuleName
         if ($Force -ne $true)
         {
             if (Test-Path $ModuleAbsolutePath)
@@ -137,10 +140,10 @@ function New-BrownservePuppetModule
                 }
                 if ($OSVersions.Keys -notcontains $OSName)
                 {
-                    $OSVersions.Add($OSName,@())
+                    $OSVersions.Add($OSName, @())
                 }
                 $Details = $SupportedOSConfiguration | 
-                    Where-Object {$_.OSFamily.Name -eq $OS } | 
+                    Where-Object { $_.OSFamily.Name -eq $OS } | 
                         Select-Object -ExpandProperty OSFamily -ErrorAction 'SilentlyContinue' |
                             Select-Object -ExpandProperty Details -ErrorAction 'SilentlyContinue'
                 if (!$Details)
@@ -215,7 +218,7 @@ function New-BrownservePuppetModule
         {
             $OSVersions.GetEnumerator() | ForEach-Object {
                 $SanitizedSupportedOS += [ordered]@{
-                    operatingsystem = $_.Key
+                    operatingsystem        = $_.Key
                     operatingsystemrelease = $_.Value
                 }
             }
@@ -287,10 +290,20 @@ function New-BrownservePuppetModule
         {
             throw "Failed to create metadata.json.`n$($_.Exception.Message)"
         }
+        $Return += [BSPuppetModule]@{
+            ModuleName               = $ModuleName
+            ModulePath               = $ModuleAbsolutePath
+            ModuleType               = $ModuleType
+            SupportedOSFamilies      = $SupportedOSFamilies
+            SupportedOSConfiguration = $SupportedOSConfiguration
+        }
     }
     
     end
     {
-        
+        if ($Return.Count -gt 0)
+        {
+            return $Return
+        }
     }
 }

@@ -10,6 +10,7 @@ function New-BrownserveTestKitchen
 
         # The path to the module where the tests should be set-up
         [Parameter(Mandatory = $true)]
+        [Alias('Path','PSPath')]
         [string]
         $ModulePath,
 

@@ -1,3 +1,44 @@
+<#
+    This class is used to create Puppet module objects and easily pass them between cmdlets
+#>
+class BSPuppetModule
+{
+    [string]$ModuleName
+    [string]$ModulePath
+    [PuppetModuleType]$ModuleType
+    [string[]]$SupportedOSFamilies
+    [BSPuppetModuleSupportedOSConfiguration]$SupportedOSConfiguration
+
+    BSPuppetModule([hashtable]$Hashtable)
+    {
+        try
+        {
+            $RequiredKeys = @(
+                'ModuleName',
+                'ModulePath',
+                'ModuleType',
+                'SupportedOSFamilies',
+                'SupportedOSConfiguration'
+            )
+            foreach ($Key in $RequiredKeys)
+            {
+                if (!$Hashtable.$Key)
+                {
+                    throw "Hashtable missing key '$Key'"
+                }
+                else
+                {
+                    $this.$Key = $Hashtable.$Key
+                }
+            }
+        }
+        catch
+        {
+            throw "`n$($_.Exception.Message)"
+        }
+    }
+}
+
 # This class is basically some param validation for the version of Puppet we want to use
 class PuppetAgentVersion
 {
@@ -147,7 +188,7 @@ class BSPuppetModuleSupportedOSFamilyDetails
         $this.Kernel = $Hashtable.Kernel
         $this.Releases = $Hashtable.Releases.GetEnumerator() | ForEach-Object {
             @{
-                ReleaseName = $_.Name
+                ReleaseName     = $_.Name
                 ReleaseSettings = $_.Value
             }
         }
@@ -179,7 +220,7 @@ class BSPuppetModuleSupportedOSConfiguration
         $Hashtable.GetEnumerator() | ForEach-Object {
             $this.OSFamily += @{
                 OSFamily = $_.Key
-                Details = $_.Value
+                Details  = $_.Value
             }
         }
     }
