@@ -1,3 +1,33 @@
+<# .SYNOPSIS
+    This file contains our enums/classes primarily used to ensure user input and cmdlet output.
+#>
+
+# This helps us to validate any test providers that we use
+enum TestProvider
+{
+    kitchen_vagrant
+}
+
+# This ensures we can easily check what type of module we're creating
+enum PuppetModuleType
+{
+    private
+    public
+}
+
+# Standardise what type of kernel we are testing against
+enum TestOSKernel
+{
+    linux
+    windows
+}
+
+# Supported kitchen drivers
+enum KitchenDriver
+{
+    vagrant
+}
+
 <#
     This class is used to create Puppet module objects and easily pass them between cmdlets
 #>
@@ -62,32 +92,6 @@ class PuppetAgentVersion
     {
         $this.version = [version]$version
     }
-}
-
-# This helps us to validate any test providers that we use
-enum TestProvider
-{
-    kitchen_vagrant
-}
-
-# This ensures we can easily check what type of module we're creating
-enum PuppetModuleType
-{
-    private
-    public
-}
-
-# Standardise what type of kernel we are testing against
-enum TestOSKernel
-{
-    linux
-    windows
-}
-
-# Supported kitchen drivers
-enum KitchenDriver
-{
-    vagrant
 }
 
 class HieraHierarchy
