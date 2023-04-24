@@ -142,36 +142,35 @@ catch
 # Place any custom code below, this will be preserved whenever you update your _init script
 ### Start user defined _init steps
 $Global:BrownserveRepoModulePath = Join-Path $Global:BrownserveRepoRootDirectory 'Module' 'Brownserve.PuppetModulePSTools.psm1'
-$PowerShellYaml = Get-Module 'powershell-yaml' -ListAvailable
-if (!$PowerShellYaml)
-{
-    Write-Verbose 'powershell-yaml not available locally, downloading'
+# Cannot currently load PlatyPS and Powershell-Yaml, will need to wait for PlatyPS to push a new version of v2 to PSGallery which includes the Nov22 changes:
+# https://github.com/PowerShell/platyPS/issues/481
+$GalleryModules = @('platyps')
+$GalleryModules | ForEach-Object {
+    $ModulePath = $null
+    $ModulePath = Get-Module $_ -ListAvailable -ErrorAction 'SilentlyContinue'
     try
     {
-        Save-Module `
-            -Name 'powershell-yaml' `
-            -Repository PSGallery `
-            -Path $Global:BrownserveRepoNugetPackagesDirectory `
-            -Force `
-            -ErrorAction 'Stop'
-        $PowerShellYaml = Get-ChildItem (Join-Path $Global:BrownserveRepoNugetPackagesDirectory 'powershell-yaml') -Filter 'powershell-yaml.psd1' -Recurse
-        if (!$PowerShellYaml)
+        if (!$ModulePath)
         {
-            Write-Error "Failed to find powershell-yaml module after download."
+            Write-Verbose "$_ not available locally, downloading"
+            Save-Module `
+                -Name $_ `
+                -Repository PSGallery `
+                -Path $Global:BrownserveRepoNugetPackagesDirectory `
+                -Force `
+                -ErrorAction 'Stop'
+            $ModulePath = Get-ChildItem (Join-Path $Global:BrownserveRepoNugetPackagesDirectory $_) -Filter "$_.psd1" -Recurse
+            if (!$ModulePath)
+            {
+                Write-Error "Failed to find $_ module after download."
+            }
         }
+        Import-Module $ModulePath -Force -ErrorAction 'stop'
     }
     catch
     {
-        throw "Failed to download powershell-yaml module.`n$($_.Exception.Message)"
+        throw "Failed to load additional PSGallery modules.`n$($_.Exception.Message)"
     }
-}
-try
-{
-    Import-Module $PowerShellYaml -Force -ErrorAction 'Stop'
-}
-catch
-{
-    throw "Failed to import powershell-yaml module.`n$($_.Exception.Message)"
 }
 try
 {
