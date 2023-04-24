@@ -1,22 +1,22 @@
-// This file contains the default configuration for our unit tests
 {
+    // This file contains a list of our commonly supported operating systems and the configuration details for each
     "ubuntu": {
         "Kernel": "linux",
         "Releases": {
             "latest": {
-                "PuppetRepo": "https://apt.puppet.com/puppet6-release-jammy.deb",
+                "PuppetAgentURL": "https://apt.puppet.com/puppet6-release-jammy.deb",
                 "VagrantBoxURL": "https://vagrantcloud.com/bento/ubuntu-22.04",
                 "ReleaseName": "jammy",
                 "ReleaseVersion": "22.04"
             },
             "stable": {
-                "PuppetRepo": "https://apt.puppet.com/puppet6-release-focal.deb",
+                "PuppetAgentURL": "https://apt.puppet.com/puppet6-release-focal.deb",
                 "VagrantBoxURL": "https://vagrantcloud.com/bento/ubuntu-20.04",
                 "ReleaseName": "focal",
                 "ReleaseVersion": "20.04"
             },
             "legacy": {
-                "PuppetRepo": "https://apt.puppet.com/puppet6-release-bionic.deb",
+                "PuppetAgentURL": "https://apt.puppet.com/puppet6-release-bionic.deb",
                 "VagrantBoxURL": "https://vagrantcloud.com/bento/ubuntu-18.04",
                 "ReleaseName": "bionic",
                 "ReleaseVersion": "18.04"
