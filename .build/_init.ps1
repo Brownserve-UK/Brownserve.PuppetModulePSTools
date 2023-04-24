@@ -144,7 +144,7 @@ catch
 $Global:BrownserveRepoModulePath = Join-Path $Global:BrownserveRepoRootDirectory 'Module' 'Brownserve.PuppetModulePSTools.psm1'
 # Cannot currently load PlatyPS and Powershell-Yaml, will need to wait for PlatyPS to push a new version of v2 to PSGallery which includes the Nov22 changes:
 # https://github.com/PowerShell/platyPS/issues/481
-$GalleryModules = @('platyps')
+$GalleryModules = @('PlatyPS')
 $GalleryModules | ForEach-Object {
     $ModulePath = $null
     $ModulePath = Get-Module $_ -ListAvailable -ErrorAction 'SilentlyContinue'
