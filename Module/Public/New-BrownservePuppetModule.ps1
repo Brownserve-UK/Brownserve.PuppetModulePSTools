@@ -26,7 +26,7 @@ function New-BrownservePuppetModule
         # The supported operating systems
         [Parameter(Mandatory = $true)]
         [string[]]
-        $SupportedOS,
+        $SupportedOSFamilies,
 
         # The author of the module
         [Parameter(Mandatory = $false)]
@@ -112,7 +112,7 @@ function New-BrownservePuppetModule
             }
         }
         
-        foreach ($OS in $SupportedOS)
+        foreach ($OS in $SupportedOSFamilies)
         {
             try
             {

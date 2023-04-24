@@ -25,8 +25,8 @@ function New-BrownserveTestKitchen
 
         # The operating systems that this module supports and should therefore be tested against
         [Parameter(Mandatory = $true)]
-        [array]
-        $SupportedOS,
+        [string[]]
+        $SupportedOSFamilies,
 
         # The configuration to use
         [Parameter(Mandatory = $false)]
@@ -144,7 +144,7 @@ function New-BrownserveTestKitchen
         }
         
         # Go through our supported OS list and create a platform for each OS we support along with each release of the OS we support
-        foreach ($OS in $SupportedOS)
+        foreach ($OS in $SupportedOSFamilies)
         {
             Write-Verbose "OS: $OS"
             # Ensure the configuration options has details for this OS.
