@@ -58,6 +58,11 @@ function New-BrownservePuppetModule
         [switch]
         $Force,
 
+        # The configuration to use
+        [Parameter(Mandatory = $false)]
+        [BSPuppetModuleSupportedOSConfiguration]
+        $Configuration,
+
         # The configuration file to use
         [Parameter(Mandatory = $false, DontShow)]
         [string]
@@ -66,7 +71,7 @@ function New-BrownservePuppetModule
     
     begin
     {
-        if (!$Configuration)
+        if (!$Configuration) #TODO: Rename this to something more appropriate
         {
             try
             {
@@ -114,12 +119,12 @@ function New-BrownservePuppetModule
                 # try and sanitize the name for the forge
                 switch -wildcard ($OS)
                 {
-                    # We may have ubuntu and ubuntu-desktop
+                    # We may have ubuntu and ubuntu-desktop, the Forge just wants 'ubuntu'
                     'ubuntu'
                     {
                         $OSName = 'ubuntu'
                     }
-                    # We may have windows-desktop, windows-server etc
+                    # We may have windows-desktop, windows-server etc, the Forge just wants 'windows'
                     'windows'
                     {
                         $OSName = 'windows'
@@ -134,17 +139,22 @@ function New-BrownservePuppetModule
                 {
                     $OSVersions.Add($OSName,@())
                 }
-                $Details = $Configuration | Select-Object -ExpandProperty $OS -ErrorAction 'SilentlyContinue'
+                $Details = $Configuration | 
+                    Where-Object {$_.OSFamily -eq $OS } | 
+                        Select-Object -ExpandProperty Details -ErrorAction 'SilentlyContinue'
                 if (!$Details)
                 {
                     throw "No operating system matching '$OS' found in configuration."
                 }
-                $Releases = $Details | Select-Object -ExpandProperty Releases -ErrorAction 'SilentlyContinue'
+                $Releases = $Details | 
+                    Select-Object -ExpandProperty Releases -ErrorAction 'SilentlyContinue'
                 if (!$Releases)
                 {
                     throw "No releases found for OS '$OS'."
                 }
-                $ReleaseVersions = $Releases.Values | Select-Object -ExpandProperty ReleaseVersion -ErrorAction 'SilentlyContinue'
+                $ReleaseVersions = $Releases | 
+                    Select-Object -ExpandProperty Settings | 
+                        Select-Object -ExpandProperty ReleaseVersion
                 if (!$ReleaseVersions)
                 {
                     throw "Unable to find release versions for OS '$OS'."
