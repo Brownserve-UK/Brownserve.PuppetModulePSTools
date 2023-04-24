@@ -1,4 +1,4 @@
-function New-BrownserveTestKitchen
+function Add-BrownservePuppetTestKitchen
 {
     [CmdletBinding()]
     param

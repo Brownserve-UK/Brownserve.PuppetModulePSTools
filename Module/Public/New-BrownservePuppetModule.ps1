@@ -74,7 +74,7 @@ function New-BrownservePuppetModule
     begin
     {
         $Return = @()
-        if (!$SupportedOSConfiguration) #TODO: Rename this to something more appropriate
+        if (!$SupportedOSConfiguration)
         {
             try
             {
