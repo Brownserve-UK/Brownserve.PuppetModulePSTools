@@ -4,7 +4,10 @@ function Add-BrownserveModuleHiera
     param
     (
         # The path to the module to add the hiera too
-        [Parameter(Mandatory = $true)]
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
         [Alias('Path','PSPath')]
         [string]
         $ModulePath,

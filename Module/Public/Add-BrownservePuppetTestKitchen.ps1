@@ -4,18 +4,27 @@ function Add-BrownservePuppetTestKitchen
     param
     (
         # The name of the module the tests are being created against
-        [Parameter(Mandatory = $true)]
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
         [string]
         $ModuleName,
 
         # The path to the module where the tests should be set-up
-        [Parameter(Mandatory = $true)]
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
         [Alias('Path','PSPath')]
         [string]
         $ModulePath,
 
         # The type of module being created
-        [Parameter(Mandatory = $true)]
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
         [PuppetModuleType]
         $ModuleType,
 
@@ -25,12 +34,18 @@ function Add-BrownservePuppetTestKitchen
         $HieraContent,
 
         # The operating systems that this module supports and should therefore be tested against
-        [Parameter(Mandatory = $true)]
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
         [string[]]
         $SupportedOSFamilies,
 
         # The configuration to use
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true
+        )]
         [BSPuppetModuleSupportedOSConfiguration]
         $SupportedOSConfiguration,
 
@@ -42,10 +57,16 @@ function Add-BrownservePuppetTestKitchen
     
     begin
     {
+        
+    }
+    
+    process
+    {
         # Test the path to the module is valid
         try
         {
-            $PathCheck = Get-Item $ModulePath -Force -ErrorAction 'Stop' | Where-Object { $_.PSIsContainer -eq $true }
+            $PathCheck = Get-Item $ModulePath -Force -ErrorAction 'Stop' | 
+                Where-Object { $_.PSIsContainer -eq $true }
             if (!$PathCheck)
             {
                 throw "Path '$ModulePath' is not a valid directory."
@@ -77,10 +98,7 @@ function Add-BrownservePuppetTestKitchen
                 throw "Failed to load configuration file '$ConfigurationFile'.`n$($_.Exception.Message)"
             }
         }
-    }
-    
-    process
-    {
+
         # These arrays will be used to create the default acceptance tests and their corresponding suites later on
         $LinuxPlatforms = @()
         $WindowsPlatforms = @()
