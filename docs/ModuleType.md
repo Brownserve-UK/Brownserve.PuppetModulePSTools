@@ -1,0 +1,4 @@
+# `-ModuleType` Parameter
+The module type parameter is used to specify whether a given Puppet module is considered `Public` or `Private`.  
+`Public` modules are those that are typically uploaded to the [Puppet Forge](https://forge.puppet.com/) and exist in their own public repository. This typically means that `Public` modules will contain their spec helper files locally and require a local gemfile to ensure prerequisites are available.  
+`Private` modules are those that exist within our environmental repo or locally on the Puppet server. Typically `Private` modules will use our global spec helpers located at the root of our environment and can assume some other files are present.

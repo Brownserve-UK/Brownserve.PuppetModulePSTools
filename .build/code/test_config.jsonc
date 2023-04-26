@@ -1,0 +1,43 @@
+// This file contains a varied configuration for performing smoke testing on our module
+{
+    "Ubuntu": {
+        "Kernel": "linux",
+        "Releases": {
+            "latest": {
+                "PuppetRepo": "https://apt.puppet.com/puppet6-release-jammy.deb",
+                "VagrantBoxURL": "https://vagrantcloud.com/bento/ubuntu-22.04",
+                "KitchenOverrides":{
+                    "Driver": {
+                        "network": [
+                            [
+                                "forwarded_port",
+                                {
+                                    "guest": 80,
+                                    "host": 8080
+                                }
+                            ]
+                        ]
+                    },
+                    "Provisioner": {}
+                }
+            },
+            "stable": {
+                "PuppetRepo": "https://apt.puppet.com/puppet6-release-focal.deb",
+                "VagrantBoxURL": "https://vagrantcloud.com/bento/ubuntu-20.04"
+            },
+            "legacy": {
+                "PuppetRepo": "https://apt.puppet.com/puppet6-release-bionic.deb",
+                "VagrantBoxURL": "https://vagrantcloud.com/bento/ubuntu-18.04"
+            }
+        }
+    },
+    "windows-server": {
+        "Kernel": "windows",
+        "Releases": {
+            "latest": {
+                "VagrantBoxURL": "https://vagrantcloud.com/gusztavvargadr/windows-server",
+                "PuppetMSI": "https://downloads.puppetlabs.com/windows/puppet6/puppet-agent-x64-latest.msi"
+            }
+        }
+    }
+}
