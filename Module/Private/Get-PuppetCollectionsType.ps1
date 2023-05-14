@@ -22,7 +22,7 @@ function Get-PuppetCollectionsType
     {
         try
         {
-            $RepoInfo = $CollectionsRepoURI | ConvertFrom-URI -ErrorAction 'Stop'
+            $RepoInfo = $CollectionsRepoURI | Split-URI -ErrorAction 'Stop'
         }
         catch
         {
