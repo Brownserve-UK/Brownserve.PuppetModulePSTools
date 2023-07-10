@@ -1,6 +1,7 @@
-# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.194.0/containers/ubuntu/.devcontainer/base.Dockerfile
+# This file is created and maintained by a tool, manual changes will be lost
 
 # [Choice] Ubuntu version: bionic, focal
+# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.194.0/containers/ubuntu/.devcontainer/base.Dockerfile
 ARG VARIANT="focal"
 FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
 
@@ -22,18 +23,11 @@ RUN dpkg -i packages-microsoft-prod.deb
 RUN apt-get update
 # Enable the "universe" repositories
 RUN add-apt-repository universe
-# Update the list of products
+# Update the list of products of again now we've got the new repo
 RUN apt-get update
 # Install PowerShell
-RUN apt-get install -y powershell
-
-## Install dotnet core
-RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-RUN dpkg -i packages-microsoft-prod.deb
-RUN rm packages-microsoft-prod.deb
-RUN apt-get install -y apt-transport-https
-RUN apt-get update
-RUN apt-get install -y dotnet-sdk-5.0
+RUN apt-get install -y powershell dotnet-sdk-5.0
 
 ## Install mono (for Nuget.exe)
+RUN apt-get update
 RUN apt-get install mono-complete -y
