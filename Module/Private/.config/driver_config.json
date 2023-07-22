@@ -1,0 +1,14 @@
+{
+    "Docker": {
+        "Driver": "docker"
+    },
+    "Vagrant": {
+        "Driver": "vagrant",
+        "AdditionalParameters": {
+            "box_check_update": true,
+            "box_auto_update": true,
+            "box_auto_prune": true
+        }
+    },
+    "DefaultDriver": "Vagrant"
+}
