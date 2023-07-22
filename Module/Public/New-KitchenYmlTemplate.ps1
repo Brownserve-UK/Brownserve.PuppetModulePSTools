@@ -25,6 +25,11 @@ function New-KitchenYmlTemplate
         [string]
         $VerifierConfigFile = (Join-Path $Script:ModuleConfigDirectory 'verifier_config.json'),
 
+        # The config file for suites
+        [Parameter(Mandatory = $false, DontShow)]
+        [string]
+        $SuitesConfigFile = (Join-Path $Script:ModuleConfigDirectory 'suites_config.json'),
+
         # The config file for drivers
         [Parameter(Mandatory = $false, DontShow)]
         [string]
@@ -95,6 +100,18 @@ function New-KitchenYmlTemplate
             }
         }
 
+        if (!$SuitesConfig)
+        {
+            try
+            {
+                $SuitesConfig = Get-Content $SuitesConfigFile -Raw | ConvertFrom-Json -AsHashtable
+            }
+            catch
+            {
+                throw "Failed to get suites config.`n$($_.Exception.Message)"
+            }
+        }
+
         $ManifestName = 'tests.pp'
         $SpecRelativePath = 'spec'
         $AcceptanceTestsRelativePath = "$SpecRelativePath/acceptance"
@@ -121,7 +138,7 @@ function New-KitchenYmlTemplate
         try
         {
             $VerifierParams = @{
-                Verifier = $VerifierConfigFile.Shell.Verifier
+                Verifier = $VerifierConfig.Shell.Verifier
             }
             $VerifierYMLContent = New-KitchenVerifier @VerifierParams
         }
@@ -129,9 +146,27 @@ function New-KitchenYmlTemplate
         {
             throw "Failed to create verifier YAML.`n$($_.Exception.Message)"
         }
+
+        try
+        {
+            $SuitesYMLContent = "suites:`n"
+            $Suites = @()
+            # We may have more than one default suite so iterate over
+            $SuitesConfig.Default | ForEach-Object {
+                $Suites += $_
+            }
+            $Suites | ForEach-Object {
+                $SuitesYMLContent += New-KitchenSuite @_
+                $SuitesYMLContent += "`n"
+            }
+        }
+        catch
+        {
+            throw "Failed to generate kitchen suite(s).`n$($_.Exception.Message)"
+        }
+
         $ProvisionerYMLContent = 'test'
         $PlatformsYMLContent = 'test'
-        $SuitesYMLContent = 'test'
 
         $YamlFiles = @(
             @{
