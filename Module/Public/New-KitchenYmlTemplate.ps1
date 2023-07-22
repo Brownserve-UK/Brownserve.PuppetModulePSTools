@@ -20,6 +20,11 @@ function New-KitchenYmlTemplate
         [KitchenDriver]
         $Driver = 'vagrant',
 
+        # The platform config file
+        [Parameter(Mandatory = $false, DontShow)]
+        [string]
+        $PlatformConfigFile = (Join-Path $Script:ModuleConfigDirectory 'platforms_config.json'),
+
         # The config file for verifiers
         [Parameter(Mandatory = $false, DontShow)]
         [string]
@@ -76,6 +81,18 @@ function New-KitchenYmlTemplate
             throw "Kitchen template files already exist. Use 'Update-KitchenYMLTemplate' to update them.`n$FoundFiles"
         }
 
+        if (!$PlatformConfig)
+        {
+            try
+            {
+                $PlatformConfig = Get-Content $PlatformConfigFile -Raw | ConvertFrom-Json -AsHashtable
+            }
+            catch
+            {
+                throw "Failed to load platform config.`n$($_.Exception.Message)"
+            }
+        }
+
         if (!$DriverConfig)
         {
             try
@@ -121,6 +138,24 @@ function New-KitchenYmlTemplate
 
         try
         {
+            $PlatformsYMLContent = "# This file contains your platforms.`n" + "platforms:`n"
+            $Platforms = @()
+
+            $PlatformConfig.Default | ForEach-Object {
+                $Platforms += $PlatformConfig.$_
+            }
+            $Platforms | ForEach-Object {
+                $PlatformsYMLContent += New-KitchenPlatform @_ + "`n"
+            }
+        }
+        catch
+        {
+            throw "Failed to generate kitchen platforms.`n$($_.Exception.Message)"
+        }
+
+        try
+        {
+            $DriverYMLContent = "# This file contains driver configuration`n"
             $DriverParams = @{
                 Driver = $DriverConfig.$Driver.Driver
             }
@@ -128,7 +163,7 @@ function New-KitchenYmlTemplate
             {
                 $DriverParams.Add('AdditionalParameters', $DriverConfig.$Driver.AdditionalParameters)
             }
-            $DriverYMLContent = New-KitchenDriver @DriverParams
+            $DriverYMLContent += New-KitchenDriver @DriverParams
         }
         catch
         {
@@ -137,10 +172,11 @@ function New-KitchenYmlTemplate
 
         try
         {
+            $VerifierYMLContent += "# This file contains verifier configuration`n"
             $VerifierParams = @{
                 Verifier = $VerifierConfig.Shell.Verifier
             }
-            $VerifierYMLContent = New-KitchenVerifier @VerifierParams
+            $VerifierYMLContent += New-KitchenVerifier @VerifierParams
         }
         catch
         {
@@ -166,7 +202,6 @@ function New-KitchenYmlTemplate
         }
 
         $ProvisionerYMLContent = 'test'
-        $PlatformsYMLContent = 'test'
 
         $YamlFiles = @(
             @{

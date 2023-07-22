@@ -1,0 +1,14 @@
+{
+    "Ubuntu-Latest": {
+        "PlatformName": "Ubuntu-Latest",
+        "Driver": "vagrant",
+        "TransportMethod": "ssh_tgz",
+        "DriverOptions": {
+            "box_url": "https://vagrantcloud.com/bento/ubuntu-22.04"
+        },
+        "ProvisionerOptions": {
+            "puppet_apt_collections_repo": "https://apt.puppet.com/puppet6-release-jammy.deb"
+        }
+    },
+    "Default": ["Ubuntu-Latest"]
+}
