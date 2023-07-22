@@ -118,8 +118,8 @@ function Add-BrownservePuppetTestKitchen
         $AcceptanceTestsRelativePath = "$SpecRelativePath/acceptance"
         $AcceptanceTestsAbsolutePath = Join-Path $SpecAbsolutePath 'acceptance'
 
-        $ManifestDirectoryRelativePath = Join-Path $SpecRelativePath 'manifests'
-        $ManifestDirectoryAbsolutePath = "$SpecAbsolutePath/manifests"
+        $ManifestDirectoryAbsolutePath = Join-Path $SpecRelativePath 'manifests'
+        $ManifestDirectoryRelativePath = "$SpecAbsolutePath/manifests"
         $ManifestPath = Join-Path $ManifestDirectoryAbsolutePath $ManifestName
         $ManifestContent = "include $ModuleName"
 
