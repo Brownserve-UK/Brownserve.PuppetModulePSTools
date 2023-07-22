@@ -59,3 +59,8 @@ else
     }
     Write-Host "For more information please use the 'Get-Help <command-name>' command`n"
 }
+
+<#
+    The config directory is used to store various default configurations for our cmdlets to reference
+#>
+$Script:ModuleConfigDirectory = Join-Path $PrivatePath '.config'
