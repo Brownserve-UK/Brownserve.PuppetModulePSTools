@@ -1,7 +1,7 @@
 {
     "Ubuntu-Latest": {
         "PlatformName": "Ubuntu-Latest",
-        "Driver": "vagrant",
+        "DriverPlugin": "vagrant",
         "TransportMethod": "ssh_tgz",
         "DriverOptions": {
             "box_url": "https://vagrantcloud.com/bento/ubuntu-22.04"

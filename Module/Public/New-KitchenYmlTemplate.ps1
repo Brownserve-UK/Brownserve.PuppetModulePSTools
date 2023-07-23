@@ -138,16 +138,18 @@ function New-KitchenYmlTemplate
 
         try
         {
-            $PlatformsYMLContent = "# This file contains your platforms.`n" + "platforms:`n"
+            $PlatformsYMLContent = "# This file contains your platforms.`n"
             $Platforms = @()
+            $PlatformsYMLHash = @{platforms = @()}
 
             $PlatformConfig.Default | ForEach-Object {
                 $Platforms += $PlatformConfig.$_
             }
             $Platforms | ForEach-Object {
-                $PlatformsYMLContent += New-KitchenPlatform @_
-                $PlatformsYMLContent += "`n"
+                $PlatformsYMLHash.platforms += New-KitchenPlatform @_ -ErrorAction 'Stop'
             }
+            $PlatformsYMLContent += $PlatformsYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
+            Write-Debug $PlatformsYMLContent
         }
         catch
         {
@@ -158,13 +160,15 @@ function New-KitchenYmlTemplate
         {
             $DriverYMLContent = "# This file contains driver configuration`n"
             $DriverParams = @{
-                Driver = $DriverConfig.$Driver.Driver
+                Driver = $Driver # TODO
             }
+            $DriverYMLHash = @{driver = $null}
             if ($DriverConfig.$Driver.AdditionalParameters)
             {
                 $DriverParams.Add('AdditionalParameters', $DriverConfig.$Driver.AdditionalParameters)
             }
-            $DriverYMLContent += New-KitchenDriver @DriverParams
+            $DriverYMLHash.driver = New-KitchenDriver @DriverParams -ErrorAction 'Stop'
+            $DriverYMLContent += $DriverYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
         catch
         {
@@ -174,10 +178,12 @@ function New-KitchenYmlTemplate
         try
         {
             $VerifierYMLContent += "# This file contains verifier configuration`n"
+            $VerifierYMLHash = @{verifier = $null}
             $VerifierParams = @{
                 Verifier = $VerifierConfig.Shell.Verifier
             }
-            $VerifierYMLContent += New-KitchenVerifier @VerifierParams
+            $VerifierYMLHash.verifier = New-KitchenVerifier @VerifierParams
+            $VerifierYMLContent += $VerifierYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
         catch
         {
@@ -186,16 +192,17 @@ function New-KitchenYmlTemplate
 
         try
         {
-            $SuitesYMLContent = "suites:`n"
+            $SuitesYMLContent = "# These are the default suites`n"
             $Suites = @()
             # We may have more than one default suite so iterate over
             $SuitesConfig.Default | ForEach-Object {
-                $Suites += $_
+                $Suites += $SuitesConfig.$_
             }
+            $SuitesYMLHash = @{suites = @()}
             $Suites | ForEach-Object {
-                $SuitesYMLContent += New-KitchenSuite @_
-                $SuitesYMLContent += "`n"
+                $SuitesYMLHash.suites += New-KitchenSuite @_
             }
+            $SuitesYMLContent += $SuitesYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
         catch
         {
