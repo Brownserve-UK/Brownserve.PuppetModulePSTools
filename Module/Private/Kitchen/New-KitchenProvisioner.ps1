@@ -106,12 +106,7 @@ function New-KitchenProvisioner
         # Whether or not to perform no-op's
         [Parameter(Mandatory = $false)]
         [bool]
-        $PuppetNoOp = $false,
-
-        # Allows returning as a hashtable instead for reasons
-        [Parameter(Mandatory = $false)]
-        [switch]
-        $AsHashtable
+        $PuppetNoOp = $false
     )
     
     begin
@@ -162,22 +157,7 @@ function New-KitchenProvisioner
         {
             $ProvisionerHash.Add('custom_facts', $CustomFacts)
         }
-
-        if ($AsHashtable)
-        {
-            $ProvisionerYaml = $ProvisionerHash
-        }
-        else
-        {
-            try
-            {
-                $ProvisionerYaml = $ProvisionerHash | Invoke-ConvertToYaml -ErrorAction 'Stop' 
-            }
-            catch
-            {
-                throw "Failed to create provisioner YAML.`n$($_.Exception.Message)"
-            }
-        }
+        $ProvisionerYaml = $ProvisionerHash
     }
     
     end

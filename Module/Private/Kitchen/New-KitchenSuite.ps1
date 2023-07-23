@@ -31,17 +31,7 @@ function New-KitchenSuite
         # An optional list of platforms that this suite should exclude
         [Parameter(Mandatory = $false)]
         [array]
-        $Excludes,
-
-        # Return a hashtable instead of the converted YAML
-        [Parameter(Mandatory = $false)]
-        [switch]
-        $AsHashtable,
-
-        # The indentation to use for the returned YAML
-        [Parameter(Mandatory = $false, DontShow)]
-        [int]
-        $Indentation = 2
+        $Excludes
     )
     
     begin
@@ -75,40 +65,7 @@ function New-KitchenSuite
         {
             $SuiteHash[0].Add('excludes', $Excludes)
         }
-        if ($AsHashtable)
-        {
-            $SuiteYaml = $SuiteHash
-        }
-        else
-        {
-            try
-            {
-                $SuiteYaml = $SuiteHash | Invoke-ConvertToYaml @{ KeepArray = $true } -ErrorAction 'Stop'
-            }
-            catch
-            {
-                throw "Failed to converted suite hash to YAML.`n$($_.Exception.Message)"
-            }
-            # ConvertTo-Yaml is really designed to convert a complete YAML file and as such doesn't support indenting things
-            if ($Indentation -gt 0)
-            {
-                $SuiteYamlArray = $SuiteYaml -split "`n"
-                Clear-Variable 'SuiteYaml'
-                $Line = 0
-                $SuiteYamlArray | ForEach-Object {
-                    $Line += 1
-                    # Don't add a newline to the last line
-                    if ($Line -eq $SuiteYamlArray.Count)
-                    {
-                        $SuiteYaml += ' ' * $Indentation + $_ + "`r"
-                    }
-                    else
-                    {
-                        $SuiteYaml += ' ' * $Indentation + $_ + "`n`r"
-                    }
-                }
-            }
-        }
+        $SuiteYaml = $SuiteHash
     }
     end
     {

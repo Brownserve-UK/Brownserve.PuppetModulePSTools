@@ -11,17 +11,7 @@ function New-KitchenDriver
         # Any additional parameters to be used (can vary by driver)
         [Parameter(Mandatory = $false)]
         [hashtable]
-        $AdditionalParameters,
-
-        # If set returns the object as a Hashtable instead of as YAML
-        [Parameter(Mandatory = $false)]
-        [switch]
-        $AsHashtable,
-
-        # The indentation to use for the returned YAML
-        [Parameter(Mandatory = $false, DontShow)]
-        [int]
-        $Indentation = 2
+        $AdditionalParameters
     )
     
     begin
@@ -45,38 +35,7 @@ function New-KitchenDriver
                 throw "Failed to merge driver hashtable objects.`n$($_.Exception.Message)"
             }
         }
-        if ($AsHashtable)
-        {
-            $DriverYaml = $DriverHash
-        }
-        else
-        {
-            try
-            {
-                $DriverYaml = $DriverHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
-            }
-            catch
-            {
-                throw "Failed to convert driver object into YAML.`n$($_.Exception.Message)"
-            }
-            if ($Indentation -gt 0)
-            {
-                $DriverYAMLArray = $DriverYaml -split "`n"
-                Clear-Variable 'DriverYaml'
-                $Line = 0
-                $DriverYAMLArray | ForEach-Object {
-                    $Line += 1
-                    if ($Line -eq $DriverYAMLArray.Count)
-                    {
-                        $DriverYaml += ' ' * $Indentation + $_ + "`r"
-                    }
-                    else
-                    {
-                        $DriverYaml += ' ' * $Indentation + $_ + "`n`r"
-                    }
-                }
-            }
-        }
+        $DriverYaml = $DriverHash
     }
     
     end

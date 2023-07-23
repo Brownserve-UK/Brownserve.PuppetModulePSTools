@@ -31,17 +31,7 @@ function New-KitchenPlatform
         # Allows us to override any kitchen provisioner options at the platform level
         [Parameter(Mandatory = $false)]
         [hashtable]
-        $ProvisionerOptions,
-
-        # If set returns the object as a Hashtable instead of as YAML
-        [Parameter(Mandatory = $false)]
-        [switch]
-        $AsHashtable,
-
-        # The indentation to use for the returned YAML
-        [Parameter(Mandatory = $false, DontShow)]
-        [int]
-        $Indentation = 2
+        $ProvisionerOptions
     )
     
     begin
@@ -73,38 +63,7 @@ function New-KitchenPlatform
         {
             $YAMLHash[0].Add('transport', @{name = $TransportMethod })
         }
-        if ($AsHashtable)
-        {
-            $PlatformTemplate = $YAMLHash
-        }
-        else
-        {
-            try
-            {
-                $PlatformTemplate = $YAMLHash | Invoke-ConvertToYaml @{ KeepArray = $true } -ErrorAction 'Stop'
-            }
-            catch
-            {
-                throw "Failed to convert object into YAML.`n$($_.Exception.Message)"
-            }
-            if ($Indentation -gt 0)
-            {
-                $ProvisionerYAMLArray = $PlatformTemplate -split "`n"
-                Clear-Variable 'PlatformTemplate'
-                $Line = 0
-                $ProvisionerYAMLArray | ForEach-Object {
-                    $Line += 1
-                    if ($Line -eq $ProvisionerYAMLArray.Count)
-                    {
-                        $PlatformTemplate += ' ' * $Indentation + $_ + "`r"
-                    }
-                    else
-                    {
-                        $PlatformTemplate += ' ' * $Indentation + $_ + "`n`r"
-                    }
-                }
-            }
-        }
+        $PlatformTemplate = $YAMLHash
     }
     
     end

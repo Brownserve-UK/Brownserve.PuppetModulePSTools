@@ -6,12 +6,7 @@ function New-KitchenVerifier
         # The verifier to use (https://kitchen.ci/docs/verifiers/)
         [Parameter(Mandatory = $false)]
         [string]
-        $Verifier = 'shell',
-
-        # Returns a hashtable instead of YAML
-        [Parameter(Mandatory = $false)]
-        [switch]
-        $AsHashtable
+        $Verifier = 'shell'
     )
     
     begin
@@ -24,21 +19,8 @@ function New-KitchenVerifier
         $VerifierHash = @{
             name = $Verifier
         }
-        if ($AsHashtable)
-        {
-            $VerifierYAML = $VerifierHash
-        }
-        else
-        {
-            try
-            {
-                $VerifierYAML = $VerifierHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
-            }
-            catch
-            {
-                throw "Failed to create verifier into YAML.`n$($_.Exception.Message)"
-            }
-        }
+
+        $VerifierYAML = $VerifierHash
     }
     
     end
