@@ -10,5 +10,5 @@
             "box_auto_prune": true
         }
     },
-    "DefaultDriver": "Vagrant"
+    "Default": "Vagrant"
 }
