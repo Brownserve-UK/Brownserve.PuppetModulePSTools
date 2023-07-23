@@ -32,7 +32,7 @@ function New-KitchenVerifier
         {
             try
             {
-                $VerifierYAML = $VerifierHash | ConvertTo-Yaml -ErrorAction 'Stop'
+                $VerifierYAML = $VerifierHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
             }
             catch
             {

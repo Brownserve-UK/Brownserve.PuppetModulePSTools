@@ -47,7 +47,7 @@ function New-ModuleHiera
         }
         try
         {
-            $HieraYaml = $HieraHash | ConvertTo-Yaml -ErrorAction 'stop'
+            $HieraYaml = $HieraHash | Invoke-ConvertToYaml -ErrorAction 'stop'
             if (!$HieraYaml)
             {
                 Write-Error "No yaml returned."

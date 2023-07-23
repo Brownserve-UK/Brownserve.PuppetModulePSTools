@@ -83,7 +83,7 @@ function New-KitchenSuite
         {
             try
             {
-                $SuiteYaml = $SuiteHash | ConvertTo-Yaml -KeepArray -ErrorAction 'Stop'
+                $SuiteYaml = $SuiteHash | Invoke-ConvertToYaml @{ KeepArray = $true } -ErrorAction 'Stop'
             }
             catch
             {

@@ -21,7 +21,7 @@ function New-KitchenDriver
         # The indentation to use for the returned YAML
         [Parameter(Mandatory = $false, DontShow)]
         [int]
-        $Indentation = 0
+        $Indentation = 2
     )
     
     begin
@@ -53,7 +53,7 @@ function New-KitchenDriver
         {
             try
             {
-                $DriverYaml = $DriverHash | ConvertTo-Yaml -ErrorAction 'Stop'
+                $DriverYaml = $DriverHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
             }
             catch
             {

@@ -81,7 +81,7 @@ function New-KitchenPlatform
         {
             try
             {
-                $PlatformTemplate = $YAMLHash | ConvertTo-Yaml -KeepArray -ErrorAction 'Stop'
+                $PlatformTemplate = $YAMLHash | Invoke-ConvertToYaml @{ KeepArray = $true } -ErrorAction 'Stop'
             }
             catch
             {

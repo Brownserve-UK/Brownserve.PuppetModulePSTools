@@ -48,7 +48,7 @@ function New-KitchenYml
                 suites = $Suite
                 platforms = $Platform
             }
-            $KitchenYaml = $KitchenHash | ConvertTo-Yaml
+            $KitchenYaml = $KitchenHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
         catch
         {

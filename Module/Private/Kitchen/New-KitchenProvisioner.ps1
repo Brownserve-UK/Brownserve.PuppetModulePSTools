@@ -171,7 +171,7 @@ function New-KitchenProvisioner
         {
             try
             {
-                $ProvisionerYaml = $ProvisionerHash | ConvertTo-Yaml -ErrorAction 'Stop' 
+                $ProvisionerYaml = $ProvisionerHash | Invoke-ConvertToYaml -ErrorAction 'Stop' 
             }
             catch
             {

@@ -48,7 +48,7 @@ function New-KitchenYmlTemplate
         {
             try
             {
-                New-Item $FullPath -ItemType 
+                New-Item $FullPath -ItemType Directory
             }
             catch
             {
@@ -145,7 +145,8 @@ function New-KitchenYmlTemplate
                 $Platforms += $PlatformConfig.$_
             }
             $Platforms | ForEach-Object {
-                $PlatformsYMLContent += New-KitchenPlatform @_ + "`n"
+                $PlatformsYMLContent += New-KitchenPlatform @_
+                $PlatformsYMLContent += "`n"
             }
         }
         catch
