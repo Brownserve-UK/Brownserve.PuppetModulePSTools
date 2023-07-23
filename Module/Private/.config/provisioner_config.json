@@ -1,0 +1,11 @@
+{
+    "Environment":{
+        "ExternalModulesPath": "../../ext-modules:../../modules",
+        "HieraDataPath": "../../hiera.tests.yaml"
+    },
+    "StandaloneModule":{
+        "ExternalModulesPath": "../ext-modules",
+        "HieraDataPath": "../hiera.tests.yaml"
+    },
+    "Default": "Environment"
+}

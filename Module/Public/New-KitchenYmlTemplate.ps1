@@ -20,6 +20,11 @@ function New-KitchenYmlTemplate
         [KitchenDriver]
         $Driver = 'vagrant',
 
+        # The provisioner config file
+        [Parameter(Mandatory = $false, DontShow)]
+        [string]
+        $ProvisionerConfigFile = (Join-Path $Script:ModuleConfigDirectory 'provisioner_config.json'),
+
         # The platform config file
         [Parameter(Mandatory = $false, DontShow)]
         [string]
@@ -129,18 +134,41 @@ function New-KitchenYmlTemplate
             }
         }
 
-        $ManifestName = 'tests.pp'
-        $SpecRelativePath = 'spec'
-        $AcceptanceTestsRelativePath = "$SpecRelativePath/acceptance"
-        $ManifestDirectoryRelativePath = "$SpecAbsolutePath/manifests"
-        $TestHieraDirectoryRelativePath = "$SpecRelativePath/hieradata"
+        if (!$ProvisionerConfig)
+        {
+            try
+            {
+                $ProvisionerConfig = Get-Content $ProvisionerConfigFile -Raw | ConvertFrom-Json -AsHashtable
+            }
+            catch
+            {
+                throw "Failed to get provisioner config.`n$($_.Exception.Message)"
+            }
+        }
 
+        
+
+        try
+        {
+            $ProvisionerYMLContent = "# This file contains your provisioner config.`n"
+            $ProvisionerYMLHash = @{provisioner = $null}
+
+            $DefaultProvisioner = $ProvisionerConfig.Default
+            $ProvisionerParams = $ProvisionerConfig.$DefaultProvisioner
+
+            $ProvisionerYMLHash.provisioner = New-KitchenProvisioner @ProvisionerParams
+            $ProvisionerYMLContent += $ProvisionerYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
+        }
+        catch
+        {
+            throw "Failed to generate kitchen provisioner.`n$($_.Exception.Message)"
+        }
 
         try
         {
             $PlatformsYMLContent = "# This file contains your platforms.`n"
             $Platforms = @()
-            $PlatformsYMLHash = @{platforms = @()}
+            $PlatformsYMLHash = @{platforms = @() }
 
             $PlatformConfig.Default | ForEach-Object {
                 $Platforms += $PlatformConfig.$_
@@ -162,7 +190,7 @@ function New-KitchenYmlTemplate
             $DriverParams = @{
                 Driver = $DriverConfig.$DefaultDriver.Driver
             }
-            $DriverYMLHash = @{driver = $null}
+            $DriverYMLHash = @{driver = $null }
             if ($DriverConfig.$DefaultDriver.AdditionalParameters)
             {
                 $DriverParams.Add('AdditionalParameters', $DriverConfig.$DefaultDriver.AdditionalParameters)
@@ -179,7 +207,7 @@ function New-KitchenYmlTemplate
         {
             $VerifierYMLContent += "# This file contains verifier configuration`n"
             $DefaultVerifier = $VerifierConfig.Default
-            $VerifierYMLHash = @{verifier = $null}
+            $VerifierYMLHash = @{verifier = $null }
             $VerifierParams = @{
                 Verifier = $VerifierConfig.$DefaultVerifier.Verifier
             }
@@ -199,7 +227,7 @@ function New-KitchenYmlTemplate
             $SuitesConfig.Default | ForEach-Object {
                 $Suites += $SuitesConfig.$_
             }
-            $SuitesYMLHash = @{suites = @()}
+            $SuitesYMLHash = @{suites = @() }
             $Suites | ForEach-Object {
                 $SuitesYMLHash.suites += New-KitchenSuite @_
             }
@@ -209,8 +237,6 @@ function New-KitchenYmlTemplate
         {
             throw "Failed to generate kitchen suite(s).`n$($_.Exception.Message)"
         }
-
-        $ProvisionerYMLContent = 'test'
 
         $YamlFiles = @(
             @{

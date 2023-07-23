@@ -4,9 +4,19 @@ function New-KitchenProvisioner
     param
     (
         # The name of the main manifest to run
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [string]
-        $ManifestName,
+        $ManifestName = "tests.pp",
+
+        # The path to any external modules that should be loaded (relative to .kitchen.yml)
+        [Parameter(Mandatory = $false)]
+        [string]
+        $ExternalModulesPath,
+
+        # The path to the hiera config to be used (relative to .kitchen.yml)
+        [Parameter(Mandatory = $false)]
+        [string]
+        $HieraConfigPath,
 
         # The name of the provisioner
         [Parameter(Mandatory = $false)]
@@ -18,20 +28,10 @@ function New-KitchenProvisioner
         [string]
         $ManifestPath = 'spec/manifests',
 
-        # The path to any external modules that should be loaded (relative to .kitchen.yml)
-        [Parameter(Mandatory = $false)]
-        [string]
-        $ExternalModulesPath = '../../ext-modules:../../modules',
-
         # The path to the test hiera that should be used
         [Parameter(Mandatory = $false)]
         [string]
         $HieraDataPath = 'spec/hieradata',
-
-        # The path to the hiera config to be used (relative to .kitchen.yml)
-        [Parameter(Mandatory = $false)]
-        [string]
-        $HieraConfigPath = '../../hiera.tests.yaml',
 
         # Whether or not to enable hiera deep merge
         [Parameter(Mandatory = $false)]
