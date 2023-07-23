@@ -4,9 +4,9 @@ function New-KitchenDriver
     param
     (
         # The name of the driver to be used
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $true)]
         [KitchenDriver]
-        $Driver = 'vagrant',
+        $Driver,
 
         # Any additional parameters to be used (can vary by driver)
         [Parameter(Mandatory = $false)]
@@ -28,7 +28,7 @@ function New-KitchenDriver
         {
             try
             {
-                $DriverHash + $AdditionalParameters
+                $DriverHash = $DriverHash + $AdditionalParameters
             }
             catch
             {
