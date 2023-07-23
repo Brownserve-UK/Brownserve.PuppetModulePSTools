@@ -149,7 +149,6 @@ function New-KitchenYmlTemplate
                 $PlatformsYMLHash.platforms += New-KitchenPlatform @_ -ErrorAction 'Stop'
             }
             $PlatformsYMLContent += $PlatformsYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
-            Write-Debug $PlatformsYMLContent
         }
         catch
         {
@@ -159,13 +158,14 @@ function New-KitchenYmlTemplate
         try
         {
             $DriverYMLContent = "# This file contains driver configuration`n"
+            $DefaultDriver = $DriverConfig.Default
             $DriverParams = @{
-                Driver = $Driver # TODO
+                Driver = $DriverConfig.$DefaultDriver.Driver
             }
             $DriverYMLHash = @{driver = $null}
-            if ($DriverConfig.$Driver.AdditionalParameters)
+            if ($DriverConfig.$DefaultDriver.AdditionalParameters)
             {
-                $DriverParams.Add('AdditionalParameters', $DriverConfig.$Driver.AdditionalParameters)
+                $DriverParams.Add('AdditionalParameters', $DriverConfig.$DefaultDriver.AdditionalParameters)
             }
             $DriverYMLHash.driver = New-KitchenDriver @DriverParams -ErrorAction 'Stop'
             $DriverYMLContent += $DriverYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
@@ -178,9 +178,10 @@ function New-KitchenYmlTemplate
         try
         {
             $VerifierYMLContent += "# This file contains verifier configuration`n"
+            $DefaultVerifier = $VerifierConfig.Default
             $VerifierYMLHash = @{verifier = $null}
             $VerifierParams = @{
-                Verifier = $VerifierConfig.Shell.Verifier
+                Verifier = $VerifierConfig.$DefaultVerifier.Verifier
             }
             $VerifierYMLHash.verifier = New-KitchenVerifier @VerifierParams
             $VerifierYMLContent += $VerifierYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
