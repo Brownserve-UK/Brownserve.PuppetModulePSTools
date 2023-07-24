@@ -1,10 +1,19 @@
 function New-KitchenYmlTemplate
 {
-    [CmdletBinding()]
+    [CmdletBinding(
+        DefaultParameterSetName = "ConfigFiles"
+    )]
     param
     (
         # The path to where to store the templates, a child directory will be created
-        [Parameter(Mandatory = $true)]
+        [Parameter(
+            Mandatory = $true,
+            ParameterSetName = "ConfigFiles"
+        )]
+        [Parameter(
+            Mandatory = $true,
+            ParameterSetName = "Config"
+        )]
         [string]
         [ValidateNotNullOrEmpty()]
         $Path,
@@ -15,33 +24,93 @@ function New-KitchenYmlTemplate
         [ValidateNotNullOrEmpty()]
         $DirectoryName = '.kitchen-templates',
 
+        # Provisioner config
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = "Config"
+        )]
+        [hashtable]
+        $ProvisionerConfig,
+
+        # The platform config
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = "Config"
+        )]
+        [hashtable]
+        $PlatformConfig,
+
+        # The suites config
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = "Config"
+        )]
+        [hashtable]
+        $SuitesConfig,
+
+        # The verifier config
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = "Config"
+        )]
+        [hashtable]
+        $VerifierConfig,
+
+        # The driver config
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = "Config"
+        )]
+        [hashtable]
+        $DriverConfig,
+
         # Forces an overwrite if things already exist
         [Parameter(Mandatory = $false)]
         [switch]
         $Force,
 
         # The provisioner config file
-        [Parameter(Mandatory = $false, DontShow)]
+        [Parameter(
+            Mandatory = $false,
+            DontShow,
+            ParameterSetName = "ConfigFiles"
+        )]
         [string]
         $ProvisionerConfigFile = (Join-Path $Script:ModuleConfigDirectory 'provisioner_config.json'),
 
         # The platform config file
-        [Parameter(Mandatory = $false, DontShow)]
+        [Parameter(
+            Mandatory = $false,
+            DontShow,
+            ParameterSetName = "ConfigFiles"
+        )]
         [string]
         $PlatformConfigFile = (Join-Path $Script:ModuleConfigDirectory 'platforms_config.json'),
 
         # The config file for verifiers
-        [Parameter(Mandatory = $false, DontShow)]
+        [Parameter(
+            Mandatory = $false,
+            DontShow,
+            ParameterSetName = "ConfigFiles"
+        )]
         [string]
         $VerifierConfigFile = (Join-Path $Script:ModuleConfigDirectory 'verifier_config.json'),
 
         # The config file for suites
-        [Parameter(Mandatory = $false, DontShow)]
+        [Parameter(
+            Mandatory = $false,
+            DontShow,
+            ParameterSetName = "ConfigFiles"
+        )]
         [string]
         $SuitesConfigFile = (Join-Path $Script:ModuleConfigDirectory 'suites_config.json'),
 
         # The config file for drivers
-        [Parameter(Mandatory = $false, DontShow)]
+        [Parameter(
+            Mandatory = $false,
+            DontShow,
+            ParameterSetName = "ConfigFiles"
+        )]
         [string]
         $DriverConfigFile = (Join-Path $Script:ModuleConfigDirectory 'driver_config.json')
     )
