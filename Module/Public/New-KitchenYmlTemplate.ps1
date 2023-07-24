@@ -1,33 +1,100 @@
 function New-KitchenYmlTemplate
 {
     [CmdletBinding(
-        DefaultParameterSetName = "ConfigFiles"
+        DefaultParameterSetName = 'ConfigFiles'
     )]
     param
     (
         # The path to where to store the templates, a child directory will be created
         [Parameter(
             Mandatory = $true,
-            ParameterSetName = "ConfigFiles"
+            ParameterSetName = 'ConfigFiles'
         )]
         [Parameter(
             Mandatory = $true,
-            ParameterSetName = "Config"
+            ParameterSetName = 'Config'
         )]
         [string]
         [ValidateNotNullOrEmpty()]
         $Path,
         
         # The directory to use for storing the templates
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'ConfigFiles'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'Config'
+        )]
         [string]
         [ValidateNotNullOrEmpty()]
         $DirectoryName = '.kitchen-templates',
 
+        # The provisioner config to use
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'ConfigFiles'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'Config'
+        )]
+        [string]
+        $ProvisionerConfigKey,
+
+        # The platform config to use
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'ConfigFiles'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'Config'
+        )]
+        [string[]]
+        $PlatformConfigKey,
+
+        # The suites config to use
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'ConfigFiles'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'Config'
+        )]
+        [string[]]
+        $SuitesConfigKey,
+
+        # The verifier config to use
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'ConfigFiles'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'Config'
+        )]
+        [string]
+        $VerifierConfigKey,
+
+        # The driver key to use
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'ConfigFiles'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'Config'
+        )]
+        [string]
+        $DriverConfigKey,
+
         # Provisioner config
         [Parameter(
             Mandatory = $false,
-            ParameterSetName = "Config"
+            ParameterSetName = 'Config'
         )]
         [hashtable]
         $ProvisionerConfig,
@@ -35,7 +102,7 @@ function New-KitchenYmlTemplate
         # The platform config
         [Parameter(
             Mandatory = $false,
-            ParameterSetName = "Config"
+            ParameterSetName = 'Config'
         )]
         [hashtable]
         $PlatformConfig,
@@ -43,7 +110,7 @@ function New-KitchenYmlTemplate
         # The suites config
         [Parameter(
             Mandatory = $false,
-            ParameterSetName = "Config"
+            ParameterSetName = 'Config'
         )]
         [hashtable]
         $SuitesConfig,
@@ -51,7 +118,7 @@ function New-KitchenYmlTemplate
         # The verifier config
         [Parameter(
             Mandatory = $false,
-            ParameterSetName = "Config"
+            ParameterSetName = 'Config'
         )]
         [hashtable]
         $VerifierConfig,
@@ -59,13 +126,20 @@ function New-KitchenYmlTemplate
         # The driver config
         [Parameter(
             Mandatory = $false,
-            ParameterSetName = "Config"
+            ParameterSetName = 'Config'
         )]
         [hashtable]
         $DriverConfig,
 
         # Forces an overwrite if things already exist
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'ConfigFiles'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'Config'
+        )]
         [switch]
         $Force,
 
@@ -73,7 +147,7 @@ function New-KitchenYmlTemplate
         [Parameter(
             Mandatory = $false,
             DontShow,
-            ParameterSetName = "ConfigFiles"
+            ParameterSetName = 'ConfigFiles'
         )]
         [string]
         $ProvisionerConfigFile = (Join-Path $Script:ModuleConfigDirectory 'provisioner_config.json'),
@@ -82,7 +156,7 @@ function New-KitchenYmlTemplate
         [Parameter(
             Mandatory = $false,
             DontShow,
-            ParameterSetName = "ConfigFiles"
+            ParameterSetName = 'ConfigFiles'
         )]
         [string]
         $PlatformConfigFile = (Join-Path $Script:ModuleConfigDirectory 'platforms_config.json'),
@@ -91,7 +165,7 @@ function New-KitchenYmlTemplate
         [Parameter(
             Mandatory = $false,
             DontShow,
-            ParameterSetName = "ConfigFiles"
+            ParameterSetName = 'ConfigFiles'
         )]
         [string]
         $VerifierConfigFile = (Join-Path $Script:ModuleConfigDirectory 'verifier_config.json'),
@@ -100,7 +174,7 @@ function New-KitchenYmlTemplate
         [Parameter(
             Mandatory = $false,
             DontShow,
-            ParameterSetName = "ConfigFiles"
+            ParameterSetName = 'ConfigFiles'
         )]
         [string]
         $SuitesConfigFile = (Join-Path $Script:ModuleConfigDirectory 'suites_config.json'),
@@ -109,7 +183,7 @@ function New-KitchenYmlTemplate
         [Parameter(
             Mandatory = $false,
             DontShow,
-            ParameterSetName = "ConfigFiles"
+            ParameterSetName = 'ConfigFiles'
         )]
         [string]
         $DriverConfigFile = (Join-Path $Script:ModuleConfigDirectory 'driver_config.json')
@@ -156,6 +230,7 @@ function New-KitchenYmlTemplate
         {
             try
             {
+                Write-Verbose "Loaded platform config from '$PlatformConfigFile'"
                 $PlatformConfig = Get-Content $PlatformConfigFile -Raw | ConvertFrom-Json -AsHashtable
             }
             catch
@@ -168,6 +243,7 @@ function New-KitchenYmlTemplate
         {
             try
             {
+                Write-Verbose "Loaded driver config from '$DriverConfigFile'"
                 $DriverConfig = Get-Content $DriverConfigFile -Raw | ConvertFrom-Json -AsHashtable
             }
             catch
@@ -180,6 +256,7 @@ function New-KitchenYmlTemplate
         {
             try
             {
+                Write-Verbose "Loaded verifier config from '$VerifierConfig'"
                 $VerifierConfig = Get-Content $VerifierConfigFile -Raw | ConvertFrom-Json -AsHashtable
             }
             catch
@@ -192,6 +269,7 @@ function New-KitchenYmlTemplate
         {
             try
             {
+                Write-Verbose "Loaded suites config from '$SuitesConfigFile'"
                 $SuitesConfig = Get-Content $SuitesConfigFile -Raw | ConvertFrom-Json -AsHashtable
             }
             catch
@@ -204,6 +282,7 @@ function New-KitchenYmlTemplate
         {
             try
             {
+                Write-Verbose "Loaded provisioner config from '$ProvisionerConfigFile'"
                 $ProvisionerConfig = Get-Content $ProvisionerConfigFile -Raw | ConvertFrom-Json -AsHashtable
             }
             catch
@@ -227,14 +306,24 @@ function New-KitchenYmlTemplate
             $ProvisionerYMLHash = @{provisioner = $null }
 
             # If a user hasn't provided a specific provisioner config to use then load the default
-            $DefaultProvisioner = $ProvisionerConfig.Default
-            if (!$DefaultProvisioner)
+            if (!$ProvisionerConfigKey)
             {
-                throw "Unable to find default provisioner."
+                Write-Verbose "Using 'Default' provisioner"
+                if (!$ProvisionerConfig.Default)
+                {
+                    throw "The '-ProvisionerConfigKey' was not provided and no 'Default' key was found in the provisioner config."
+                }
+                $ProvisionerConfigKey = $ProvisionerConfig.Default
+            }
+            Write-Debug "ProvisionerConfigKey = $ProvisionerConfigKey"
+
+            if (!$ProvisionerConfig.$ProvisionerConfigKey)
+            {
+                throw "The key '$ProvisionerConfigKey' was not found in the provisioner config."
             }
 
             # Build the parameters that are passed to the New-KitchenProvisioner cmdlet
-            $ProvisionerParams = $ProvisionerConfig.$DefaultProvisioner
+            $ProvisionerParams = $ProvisionerConfig.$ProvisionerConfigKey
 
             # Generate the provisioner values and store them in our hashtable
             $ProvisionerYMLHash.provisioner = New-KitchenProvisioner @ProvisionerParams
@@ -253,10 +342,26 @@ function New-KitchenYmlTemplate
             $Platforms = @()
             $PlatformsYMLHash = @{platforms = @() }
 
+            if (!$PlatformConfigKey)
+            {
+                Write-Verbose "Using 'Default' platform"
+                if (!$PlatformConfig.Default)
+                {
+                    throw "The '-PlatformConfigKey' was not provided and no 'Default' key was found in the platform config."
+                }
+                $PlatformConfigKey = $PlatformConfig.Default
+            }
+            Write-Debug "PlatformConfigKey = $PlatformConfigKey"
+
             # We often want to support multiple platforms so we iterate over the default, even if it turns out to be a string this should be safe to do.
-            $PlatformConfig.Default | ForEach-Object {
+            $PlatformConfigKey | ForEach-Object {
+                if (!$PlatformConfig.$_)
+                {
+                    throw "The key '$_' was not found in the platform config."
+                }
                 $Platforms += $PlatformConfig.$_
             }
+            Write-Debug "Platforms = $($Platforms -join ", ")"
             $Platforms | ForEach-Object {
                 $PlatformsYMLHash.platforms += New-KitchenPlatform @_ -ErrorAction 'Stop'
             }
@@ -270,8 +375,25 @@ function New-KitchenYmlTemplate
         try
         {
             $DriverYMLContent = "# This file contains driver configuration`n"
-            $DefaultDriver = $DriverConfig.Default
-            $DriverParams =  $DriverConfig.$DefaultDriver
+
+            if (!$DriverConfigKey)
+            {
+                Write-Verbose "Using 'Default' driver"
+                if (!$DriverConfig.Default)
+                {
+                    throw "The '-DriverConfigKey' was not provided and no 'Default' key was found in the driver config."
+                }
+                $DriverConfigKey = $DriverConfig.Default
+            }
+
+            Write-Debug "DriverConfigKey = $DriverConfigKey"
+
+            if (!$DriverConfig.$DriverConfigKey)
+            {
+                throw "The key '$DriverConfigKey' was not found in the driver config."
+            }
+            
+            $DriverParams = $DriverConfig.$DriverConfigKey
             $DriverYMLHash = @{driver = $null }
             $DriverYMLHash.driver = New-KitchenDriver @DriverParams -ErrorAction 'Stop'
             $DriverYMLContent += $DriverYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
@@ -284,9 +406,25 @@ function New-KitchenYmlTemplate
         try
         {
             $VerifierYMLContent += "# This file contains verifier configuration`n"
-            $DefaultVerifier = $VerifierConfig.Default
+
+            if (!$VerifierConfigKey)
+            {
+                Write-Verbose "Using 'Default' verifier"
+                if (!$VerifierConfig.Default)
+                {
+                    throw "The '-VerifierConfigKey' was not provided and no 'Default' key was found in the verifier config."
+                }
+                $VerifierConfigKey = $VerifierConfig.Default
+            }
+
+            Write-Debug "VerifierConfigKey = $VerifierConfigKey"
+            if (!$VerifierConfig.$VerifierConfigKey)
+            {
+                throw "The key '$VerifierConfigKey' was not found in the verifier config."
+            }
+            
             $VerifierYMLHash = @{verifier = $null }
-            $VerifierParams = $VerifierConfig.$DefaultVerifier
+            $VerifierParams = $VerifierConfig.$VerifierConfigKey
             $VerifierYMLHash.verifier = New-KitchenVerifier @VerifierParams
             $VerifierYMLContent += $VerifierYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
@@ -299,8 +437,23 @@ function New-KitchenYmlTemplate
         {
             $SuitesYMLContent = "# These are the default suites`n"
             $Suites = @()
+
+            if (!$SuitesConfigKey)
+            {
+                Write-Verbose "Using 'Default' suites"
+                if (!$SuitesConfig.Default)
+                {
+                    throw "The '-SuitesConfigKey' was not provided and no 'Default' key was found in the suites config."
+                }
+                $SuitesConfigKey = $SuitesConfig.Default
+            }
+
             # We may have more than one default suite so iterate over
-            $SuitesConfig.Default | ForEach-Object {
+            $SuitesConfigKey | ForEach-Object {
+                if (!$SuitesConfig.$_)
+                {
+                    throw "The key '$_' was not found in the suites config."
+                }
                 $Suites += $SuitesConfig.$_
             }
             $SuitesYMLHash = @{suites = @() }
