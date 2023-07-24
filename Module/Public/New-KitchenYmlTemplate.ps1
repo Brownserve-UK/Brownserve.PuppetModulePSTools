@@ -4,7 +4,7 @@ function New-KitchenYmlTemplate
     param
     (
         # The path to where to store the templates, a child directory will be created
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $true)]
         [string]
         [ValidateNotNullOrEmpty()]
         $Path,
@@ -15,10 +15,10 @@ function New-KitchenYmlTemplate
         [ValidateNotNullOrEmpty()]
         $DirectoryName = '.kitchen-templates',
 
-        # The driver to use
+        # Forces an overwrite if things already exist
         [Parameter(Mandatory = $false)]
-        [KitchenDriver]
-        $Driver = 'vagrant',
+        [switch]
+        $Force,
 
         # The provisioner config file
         [Parameter(Mandatory = $false, DontShow)]
@@ -49,24 +49,17 @@ function New-KitchenYmlTemplate
     begin
     {
         $FullPath = Join-Path $Path $DirectoryName
-        if (!(Test-Path $FullPath))
+        if ((Test-Path $FullPath))
         {
-            try
-            {
-                New-Item $FullPath -ItemType Directory
-            }
-            catch
-            {
-                throw "Failed to create template directory.`n$($_.Exception.Message)"
-            }
+            Assert-Directory $FullPath
         }
-        Assert-Directory $FullPath
     }
     
     process
     {
         <#
-            We make the concious decision to create ALL the parts required for a kitchen YAML.
+            We make the concious decision to template all the sections that make up kitchen.yml.
+            If desired a user can choose not to load a given template as part of their config.
         #>
         $DriverYMLPath = Join-Path $FullPath 'driver.yml'
         $PlatformsYMLPath = Join-Path $FullPath 'platforms.yml'
@@ -75,8 +68,9 @@ function New-KitchenYmlTemplate
         $SuitesYMLPath = Join-Path $FullPath 'suites.yml'
         $FoundFiles = @()
 
+        # Ensure that none of the templates already exist
         @($DriverYMLPath, $PlatformsYMLPath, $ProvisionerYMLPath, $VerifierYMLPath, $SuitesYMLPath) | ForEach-Object {
-            if (Test-Path $_)
+            if ((Test-Path $_) -and (!$Force))
             {
                 $FoundFiles += $_
             }
@@ -86,6 +80,9 @@ function New-KitchenYmlTemplate
             throw "Kitchen template files already exist. Use 'Update-KitchenYMLTemplate' to update them.`n$FoundFiles"
         }
 
+        <#
+            Load the various config files to get our default settings if the user hasn't passed in custom configuration
+        #>
         if (!$PlatformConfig)
         {
             try
@@ -146,17 +143,34 @@ function New-KitchenYmlTemplate
             }
         }
 
-        
-
+        <#
+            Now we'll use either the loaded config or user provided config to start building up the templates.
+            The general process is the same for each, we read the config then pass those values to the corresponding
+            cmdlet that will generate a hashtable in the format we expect so we can convert it to YAML.
+            We ensure we can generate all the files first before writing anything to disk.
+            I've broken the process for the provisioner for reference, the others are largely the same
+        #>
         try
         {
+            # Start by having a header line
             $ProvisionerYMLContent = "# This file contains your provisioner config.`n"
-            $ProvisionerYMLHash = @{provisioner = $null}
+            # Create a hashtable that we can use to convert into YAML
+            $ProvisionerYMLHash = @{provisioner = $null }
 
+            # If a user hasn't provided a specific provisioner config to use then load the default
             $DefaultProvisioner = $ProvisionerConfig.Default
+            if (!$DefaultProvisioner)
+            {
+                throw "Unable to find default provisioner."
+            }
+
+            # Build the parameters that are passed to the New-KitchenProvisioner cmdlet
             $ProvisionerParams = $ProvisionerConfig.$DefaultProvisioner
 
+            # Generate the provisioner values and store them in our hashtable
             $ProvisionerYMLHash.provisioner = New-KitchenProvisioner @ProvisionerParams
+
+            # Convert the hashtable to YAML
             $ProvisionerYMLContent += $ProvisionerYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
         catch
@@ -170,6 +184,7 @@ function New-KitchenYmlTemplate
             $Platforms = @()
             $PlatformsYMLHash = @{platforms = @() }
 
+            # We often want to support multiple platforms so we iterate over the default, even if it turns out to be a string this should be safe to do.
             $PlatformConfig.Default | ForEach-Object {
                 $Platforms += $PlatformConfig.$_
             }
@@ -187,14 +202,8 @@ function New-KitchenYmlTemplate
         {
             $DriverYMLContent = "# This file contains driver configuration`n"
             $DefaultDriver = $DriverConfig.Default
-            $DriverParams = @{
-                Driver = $DriverConfig.$DefaultDriver.Driver
-            }
+            $DriverParams =  $DriverConfig.$DefaultDriver
             $DriverYMLHash = @{driver = $null }
-            if ($DriverConfig.$DefaultDriver.AdditionalParameters)
-            {
-                $DriverParams.Add('AdditionalParameters', $DriverConfig.$DefaultDriver.AdditionalParameters)
-            }
             $DriverYMLHash.driver = New-KitchenDriver @DriverParams -ErrorAction 'Stop'
             $DriverYMLContent += $DriverYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
@@ -208,9 +217,7 @@ function New-KitchenYmlTemplate
             $VerifierYMLContent += "# This file contains verifier configuration`n"
             $DefaultVerifier = $VerifierConfig.Default
             $VerifierYMLHash = @{verifier = $null }
-            $VerifierParams = @{
-                Verifier = $VerifierConfig.$DefaultVerifier.Verifier
-            }
+            $VerifierParams = $VerifierConfig.$DefaultVerifier
             $VerifierYMLHash.verifier = New-KitchenVerifier @VerifierParams
             $VerifierYMLContent += $VerifierYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
@@ -274,10 +281,21 @@ function New-KitchenYmlTemplate
         }
         else
         {
+            if (!(Test-Path $FullPath))
+            {
+                try
+                {
+                    New-Item $FullPath -ItemType Directory
+                }
+                catch
+                {
+                    throw "Failed to create template directory.`n$($_.Exception.Message)"
+                }
+            }
             $YamlFiles | ForEach-Object {
                 try
                 {
-                    New-Item -Path $_.Path -ItemType File -Value $_.Content
+                    New-Item -Path $_.Path -ItemType File -Value $_.Content -Force:$Force
                 }
                 catch
                 {
