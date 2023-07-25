@@ -1,4 +1,4 @@
-function New-KitchenYmlTemplate
+function Add-KitchenTemplates
 {
     [CmdletBinding(
         DefaultParameterSetName = 'ConfigFiles'
@@ -102,6 +102,16 @@ function New-KitchenYmlTemplate
         )]
         [switch]
         $Force,
+
+        # Special config file to allow setting default parameters
+        [Parameter(
+            Mandatory = $false,
+            DontShow,
+            ParameterSetName = 'ConfigFiles'
+        )]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $KitchenConfigFile = (Join-Path $Script:ModuleConfigDirectory 'kitchen_config.json'),
 
         # The provisioner config file
         [Parameter(
