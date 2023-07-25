@@ -1,18 +1,11 @@
 function Add-KitchenTemplates
 {
-    [CmdletBinding(
-        DefaultParameterSetName = 'ConfigFiles'
-    )]
+    [CmdletBinding()]
     param
     (
         # The path to where to store the templates, a child directory will be created
         [Parameter(
-            Mandatory = $true,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $true,
-            ParameterSetName = 'Config'
+            Mandatory = $true
         )]
         [string]
         [ValidateNotNullOrEmpty()]
@@ -20,104 +13,56 @@ function Add-KitchenTemplates
         
         # The directory to use for storing the templates
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
+            Mandatory = $false
         )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
-        )]
-        [string]
         [ValidateNotNullOrEmpty()]
         $DirectoryName = '.kitchen-templates',
 
         # The provisioner config to use
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [string]
         $ProvisionerConfigKey,
 
         # The platform config to use
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [string[]]
         $PlatformConfigKey,
 
         # The suites config to use
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [string[]]
         $SuitesConfigKey,
 
         # The verifier config to use
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [string]
         $VerifierConfigKey,
 
         # The driver key to use
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [string]
         $DriverConfigKey,
 
         # Forces an overwrite if things already exist
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [switch]
         $Force,
 
-        # Special config file to allow setting default parameters
-        [Parameter(
-            Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $KitchenConfigFile = (Join-Path $Script:ModuleConfigDirectory 'kitchen_config.json'),
-
         # The provisioner config file
         [Parameter(
-            Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
+            Mandatory = $false
         )]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -125,9 +70,7 @@ function Add-KitchenTemplates
 
         # The platform config file
         [Parameter(
-            Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
+            Mandatory = $false
         )]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -135,9 +78,7 @@ function Add-KitchenTemplates
 
         # The config file for verifiers
         [Parameter(
-            Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
+            Mandatory = $false
         )]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -145,9 +86,7 @@ function Add-KitchenTemplates
 
         # The config file for suites
         [Parameter(
-            Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
+            Mandatory = $false
         )]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -155,9 +94,7 @@ function Add-KitchenTemplates
 
         # The config file for drivers
         [Parameter(
-            Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
+            Mandatory = $false
         )]
         [ValidateNotNullOrEmpty()]
         [string]
