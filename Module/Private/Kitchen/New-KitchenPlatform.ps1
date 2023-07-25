@@ -16,7 +16,7 @@ function New-KitchenPlatform
         # An optional transport method to be used
         [Parameter(Mandatory = $false)]
         [string]
-        $TransportMethod,
+        $TransportOptions,
 
         # Any additional driver config options
         [Parameter(Mandatory = $false)]
@@ -59,9 +59,9 @@ function New-KitchenPlatform
         {
             $YAMLHash[0].Add('provisioner', $ProvisionerOptions)
         }
-        if ($TransportMethod)
+        if ($TransportOptions)
         {
-            $YAMLHash[0].Add('transport', @{name = $TransportMethod })
+            $YAMLHash[0].Add('transport', $TransportOptions)
         }
         $PlatformTemplate = $YAMLHash
     }
