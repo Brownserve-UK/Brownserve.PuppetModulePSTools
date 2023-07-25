@@ -8,7 +8,7 @@ schema: 2.0.0
 # New-BrownservePuppetModule
 
 ## SYNOPSIS
-Create a new Puppet module in our expected format
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
@@ -21,24 +21,21 @@ New-BrownservePuppetModule [-ModuleName] <String> [-ModulePath] <String> [[-Desc
 ```
 
 ## DESCRIPTION
-This cmdlet can be used to create a new Puppet module in the standard Brownserve format.  
-The output from this cmdlet can be piped into some other cmdlets for quickly creating tests and hiera.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-New-BrownservePuppetModule `
-    -ModuleName 'myModule' `
-    -ModulePath 'C:\' `
+PS C:\> {{ Add example code here }}
 ```
 
-This would create a new module at `C:\myModule`
+{{ Add example description here }}
 
 ## PARAMETERS
 
 ### -Description
-An optional summary/description of the module.
+{{ Fill Description Description }}
 
 ```yaml
 Type: String[]
@@ -53,7 +50,7 @@ Accept wildcard characters: False
 ```
 
 ### -Force
-Forces creation even if the module already exists
+{{ Fill Force Description }}
 
 ```yaml
 Type: SwitchParameter
@@ -68,7 +65,7 @@ Accept wildcard characters: False
 ```
 
 ### -ForgeUsername
-The name of the user who will own this module on Puppet forge (only used when creating public modules).
+{{ Fill ForgeUsername Description }}
 
 ```yaml
 Type: String
@@ -77,13 +74,13 @@ Aliases:
 
 Required: False
 Position: 6
-Default value: brownserve
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -IncludeParams
-If set to true will include a private params class
+{{ Fill IncludeParams Description }}
 
 ```yaml
 Type: Boolean
@@ -92,13 +89,13 @@ Aliases:
 
 Required: False
 Position: 9
-Default value: True
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ModuleAuthor
-The name of the person who wrote this module (only used when creating public modules)
+{{ Fill ModuleAuthor Description }}
 
 ```yaml
 Type: String
@@ -113,7 +110,7 @@ Accept wildcard characters: False
 ```
 
 ### -ModuleLicense
-The license to use for this module (only used when creating a public module)
+{{ Fill ModuleLicense Description }}
 
 ```yaml
 Type: String
@@ -122,13 +119,13 @@ Aliases:
 
 Required: False
 Position: 7
-Default value: mit
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ModuleName
-The name of the module to be created
+{{ Fill ModuleName Description }}
 
 ```yaml
 Type: String
@@ -143,7 +140,7 @@ Accept wildcard characters: False
 ```
 
 ### -ModulePath
-The path to where the module should be created
+{{ Fill ModulePath Description }}
 
 ```yaml
 Type: String
@@ -158,7 +155,7 @@ Accept wildcard characters: False
 ```
 
 ### -ModuleRequirements
-An optional list of requirements this module needs to work
+{{ Fill ModuleRequirements Description }}
 
 ```yaml
 Type: Hashtable[]
@@ -173,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -ModuleType
-Whether the module is public (i.e. public repository or uploaded to the forge) or private (i.e. private repo, local to the Puppet server or an environment)
+{{ Fill ModuleType Description }}
 
 ```yaml
 Type: PuppetModuleType
@@ -189,7 +186,7 @@ Accept wildcard characters: False
 ```
 
 ### -SupportedOSConfiguration
-The configuration to use for supported operating systems [(see SupportedOSConfiguration.md)](../../SupportedOSConfiguration.md)
+{{ Fill SupportedOSConfiguration Description }}
 
 ```yaml
 Type: BSPuppetModuleSupportedOSConfiguration
@@ -204,8 +201,7 @@ Accept wildcard characters: False
 ```
 
 ### -SupportedOSFamilies
-The family of operating systems that should be supported (e.g. 'ubuntu','windows' etc).
-These must be present in the `-SupportedOSConfiguration` parameter
+{{ Fill SupportedOSFamilies Description }}
 
 ```yaml
 Type: String[]

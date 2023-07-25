@@ -8,7 +8,7 @@ schema: 2.0.0
 # Add-BrownserveModuleHiera
 
 ## SYNOPSIS
-Adds module layer hiera to an existing Puppet module
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
@@ -17,21 +17,21 @@ Add-BrownserveModuleHiera [-ModulePath] <String> [[-HieraPaths] <String[]>] [<Co
 ```
 
 ## DESCRIPTION
-This cmdlet can be used to quickly add our default module layer hiera configuration to a pre-existing Puppet module.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-Add-BrownserveModuleHiera -ModulePath C:\myModule
+PS C:\> {{ Add example code here }}
 ```
 
-This would add our default module layer hiera configuration to the module located at `C:\myModule`
+{{ Add example description here }}
 
 ## PARAMETERS
 
 ### -HieraPaths
-A list of hiera paths to be created
+{{ Fill HieraPaths Description }}
 
 ```yaml
 Type: String[]
@@ -40,13 +40,13 @@ Aliases:
 
 Required: False
 Position: 1
-Default value: common.yaml
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ModulePath
-The path to the module to add the hiera configuration to
+{{ Fill ModulePath Description }}
 
 ```yaml
 Type: String

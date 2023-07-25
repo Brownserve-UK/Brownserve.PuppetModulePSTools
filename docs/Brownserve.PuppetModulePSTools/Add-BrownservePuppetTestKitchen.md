@@ -8,7 +8,7 @@ schema: 2.0.0
 # Add-BrownservePuppetTestKitchen
 
 ## SYNOPSIS
-Adds Chef's test-kitchen to a given Puppet module
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
@@ -19,25 +19,21 @@ Add-BrownservePuppetTestKitchen [-ModuleName] <String> [-ModulePath] <String> [-
 ```
 
 ## DESCRIPTION
-This cmdlet adds a test-kitchen configuration to a given Puppet module using our standard configuration while allowing for some customisation.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> Add-BrownservePuppetTestKitchen `
-    -ModuleName 'myModule' `
-    -ModulePath 'C:\myModule' `
-    -ModuleType 'public' `
-    -SupportedOSFamilies 'ubuntu'
+PS C:\> {{ Add example code here }}
 ```
 
-This would add test-kitchen to the module located at `C:\myModule` and would ensure the module is tested against Ubuntu.
+{{ Add example description here }}
 
 ## PARAMETERS
 
 ### -HieraContent
-Optional content to be added to the kitchen hiera
+{{ Fill HieraContent Description }}
 
 ```yaml
 Type: String
@@ -52,7 +48,7 @@ Accept wildcard characters: False
 ```
 
 ### -ModuleName
-The name of the module, this is used to set various bits of the kitchen configuration
+{{ Fill ModuleName Description }}
 
 ```yaml
 Type: String
@@ -67,7 +63,7 @@ Accept wildcard characters: False
 ```
 
 ### -ModulePath
-The path to the module where the test-kitchen configuration should be created
+{{ Fill ModulePath Description }}
 
 ```yaml
 Type: String
@@ -82,8 +78,8 @@ Accept wildcard characters: False
 ```
 
 ### -ModuleType
-What type of module this is, public or private. Affects where acceptance test helpers are loaded from. 
-[(see ModuleType.md)](../../ModuleType.md) for more information.
+{{ Fill ModuleType Description }}
+
 ```yaml
 Type: PuppetModuleType
 Parameter Sets: (All)
@@ -98,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -SupportedOSConfiguration
-The configuration to use for supported operating systems [(see SupportedOSConfiguration.md)](../../SupportedOSConfiguration.md) for more information.
+{{ Fill SupportedOSConfiguration Description }}
 
 ```yaml
 Type: BSPuppetModuleSupportedOSConfiguration
@@ -113,7 +109,7 @@ Accept wildcard characters: False
 ```
 
 ### -SupportedOSFamilies
-The operating system families that this module supports and therefore should be tested against. (e.g. 'ubuntu','windows' etc)
+{{ Fill SupportedOSFamilies Description }}
 
 ```yaml
 Type: String[]
