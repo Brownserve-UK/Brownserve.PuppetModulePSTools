@@ -15,7 +15,7 @@ function New-KitchenPlatform
 
         # An optional transport method to be used
         [Parameter(Mandatory = $false)]
-        [string]
+        [hashtable]
         $TransportOptions,
 
         # Any additional driver config options
