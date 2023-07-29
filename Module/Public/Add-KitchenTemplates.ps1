@@ -60,6 +60,16 @@ function Add-KitchenTemplates
         [switch]
         $Force,
 
+        # If set will use OS mappings to generate platforms/suites
+        [Parameter(Mandatory = $false)]
+        [bool]
+        $UseOSMapping = $true,
+
+        # Load our special OS mapping config file
+        [Parameter(Mandatory = $false)]
+        [string]
+        $OSMappingConfigFile = (Join-Path $Script:ModuleConfigDirectory 'os_mapping_config.json'),
+
         # The provisioner config file
         [Parameter(
             Mandatory = $false
@@ -143,7 +153,9 @@ function Add-KitchenTemplates
                 VerifierConfigFile    = $VerifierConfigFile
                 SuitesConfigFile      = $SuitesConfigFile
                 PlatformConfigFile    = $PlatformConfigFile
+                OSMappingConfigFile   = $OSMappingConfigFile
                 FilePerSection        = $true
+                UseOSMapping          = $UseOSMapping
             }
             if ($DriverConfigKey)
             {

@@ -117,6 +117,32 @@ function New-KitchenYml
         [switch]
         $FilePerSection,
 
+        # If true will use the special OS mappings config to generate provisioners/suites
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'ConfigFiles'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ParameterSetName = 'Config'
+        )]
+        [bool]
+        $UseOSMapping = $true,
+
+        # The special OS mapping config
+        [Parameter(
+            Mandatory = $false,
+            DontShow,
+            ParameterSetName = 'ConfigFiles'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            DontShow,
+            ParameterSetName = 'Config'
+        )]
+        [string]
+        $OSMappingConfigFile = (Join-Path $Script:ModuleConfigDirectory 'os_mapping_config.json'),
+
         # The provisioner config file
         [Parameter(
             Mandatory = $false,
@@ -176,18 +202,45 @@ function New-KitchenYml
     process
     {
         <#
-            Load the various config files to get our default settings if the user hasn't passed in custom configuration
+            TODO: Document this process
         #>
-        if (!$PlatformConfig)
+        if ($UseOSMapping)
         {
             try
             {
-                Write-Verbose "Loaded platform config from '$PlatformConfigFile'"
-                $PlatformConfig = Get-Content $PlatformConfigFile -Raw | ConvertFrom-Json -AsHashtable
+                $OSMappings = Get-SupportedOSConfiguration -OSMappingConfigFile $OSMappingConfigFile
             }
             catch
             {
-                throw "Failed to load platform config.`n$($_.Exception.Message)"
+                throw 'Failed to get supported OS configuration'
+            }
+        }
+        else
+        {
+            if (!$PlatformConfig)
+            {
+                try
+                {
+                    Write-Verbose "Loaded platform config from '$PlatformConfigFile'"
+                    $PlatformConfig = Get-Content $PlatformConfigFile -Raw | ConvertFrom-Json -AsHashtable
+                }
+                catch
+                {
+                    throw "Failed to load platform config.`n$($_.Exception.Message)"
+                }
+            }
+
+            if (!$SuitesConfig)
+            {
+                try
+                {
+                    Write-Verbose "Loaded suites config from '$SuitesConfigFile'"
+                    $SuitesConfig = Get-Content $SuitesConfigFile -Raw | ConvertFrom-Json -AsHashtable
+                }
+                catch
+                {
+                    throw "Failed to get suites config.`n$($_.Exception.Message)"
+                }
             }
         }
 
@@ -214,19 +267,6 @@ function New-KitchenYml
             catch
             {
                 throw "Failed to get verifier config.`n$($_.Exception.Message)"
-            }
-        }
-
-        if (!$SuitesConfig)
-        {
-            try
-            {
-                Write-Verbose "Loaded suites config from '$SuitesConfigFile'"
-                $SuitesConfig = Get-Content $SuitesConfigFile -Raw | ConvertFrom-Json -AsHashtable
-            }
-            catch
-            {
-                throw "Failed to get suites config.`n$($_.Exception.Message)"
             }
         }
 
@@ -302,28 +342,35 @@ function New-KitchenYml
             $Platforms = @()
             $PlatformsYMLHash = @{platforms = @() }
 
-            if (!$PlatformConfigKey)
+            if ($OSMappings)
             {
-                Write-Verbose "Using 'Default' platform"
-                if (!$PlatformConfig.Default)
-                {
-                    throw "The '-PlatformConfigKey' was not provided and no 'Default' key was found in the platform config."
-                }
-                $PlatformConfigKey = $PlatformConfig.Default
+                $PlatformsYMLHash.platforms = $OSMappings.KitchenPlatforms
             }
-            Write-Debug "PlatformConfigKey = $PlatformConfigKey"
+            else
+            {
+                if (!$PlatformConfigKey)
+                {
+                    Write-Verbose "Using 'Default' platform"
+                    if (!$PlatformConfig.Default)
+                    {
+                        throw "The '-PlatformConfigKey' was not provided and no 'Default' key was found in the platform config."
+                    }
+                    $PlatformConfigKey = $PlatformConfig.Default
+                }
+                Write-Debug "PlatformConfigKey = $PlatformConfigKey"
 
-            # We often want to support multiple platforms so we iterate over the default, even if it turns out to be a string this should be safe to do.
-            $PlatformConfigKey | ForEach-Object {
-                if (!$PlatformConfig.$_)
-                {
-                    throw "The key '$_' was not found in the platform config."
+                # We often want to support multiple platforms so we iterate over the default, even if it turns out to be a string this should be safe to do.
+                $PlatformConfigKey | ForEach-Object {
+                    if (!$PlatformConfig.$_)
+                    {
+                        throw "The key '$_' was not found in the platform config."
+                    }
+                    $Platforms += $PlatformConfig.$_
                 }
-                $Platforms += $PlatformConfig.$_
-            }
-            Write-Debug "Platforms = $($Platforms -join ', ')"
-            $Platforms | ForEach-Object {
-                $PlatformsYMLHash.platforms += New-KitchenPlatform @_ -ErrorAction 'Stop'
+                Write-Debug "Platforms = $($Platforms -join ', ')"
+                $Platforms | ForEach-Object {
+                    $PlatformsYMLHash.platforms += New-KitchenPlatform @_ -ErrorAction 'Stop'
+                }
             }
             $PlatformsYMLContent += $PlatformsYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
@@ -412,28 +459,35 @@ function New-KitchenYml
 # for a particular OS/manifest combination.`n
 "@
             $Suites = @()
-
-            if (!$SuitesConfigKey)
-            {
-                Write-Verbose "Using 'Default' suites"
-                if (!$SuitesConfig.Default)
-                {
-                    throw "The '-SuitesConfigKey' was not provided and no 'Default' key was found in the suites config."
-                }
-                $SuitesConfigKey = $SuitesConfig.Default
-            }
-
-            # We may have more than one default suite so iterate over
-            $SuitesConfigKey | ForEach-Object {
-                if (!$SuitesConfig.$_)
-                {
-                    throw "The key '$_' was not found in the suites config."
-                }
-                $Suites += $SuitesConfig.$_
-            }
             $SuitesYMLHash = @{suites = @() }
-            $Suites | ForEach-Object {
-                $SuitesYMLHash.suites += New-KitchenSuite @_
+
+            if ($OSMappings)
+            {
+                $SuitesYMLHash.suites = $OSMappings.KitchenSuites
+            }
+            else
+            {
+                if (!$SuitesConfigKey)
+                {
+                    Write-Verbose "Using 'Default' suites"
+                    if (!$SuitesConfig.Default)
+                    {
+                        throw "The '-SuitesConfigKey' was not provided and no 'Default' key was found in the suites config."
+                    }
+                    $SuitesConfigKey = $SuitesConfig.Default
+                }
+
+                # We may have more than one default suite so iterate over
+                $SuitesConfigKey | ForEach-Object {
+                    if (!$SuitesConfig.$_)
+                    {
+                        throw "The key '$_' was not found in the suites config."
+                    }
+                    $Suites += $SuitesConfig.$_
+                }
+                $Suites | ForEach-Object {
+                    $SuitesYMLHash.suites += New-KitchenSuite @_
+                }
             }
             $SuitesYMLContent += $SuitesYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
