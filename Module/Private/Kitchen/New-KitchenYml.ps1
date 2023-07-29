@@ -1,153 +1,85 @@
+<#
+.SYNOPSIS
+    A short one-line action-based description, e.g. 'Tests if a function is valid'
+.DESCRIPTION
+    A longer description of the function, its purpose, common use cases, etc.
+#>
 function New-KitchenYml
 {
-    [CmdletBinding(
-        DefaultParameterSetName = 'ConfigFiles'
-    )]
+    [CmdletBinding()]
     param
     (
+        # Allows the cmdlet to accept a provisioner hashtable created elsewhere
+        [Parameter(Mandatory = $false)]
+        [hashtable]
+        $Provisioner,
+
+        # Allows the cmdlet to accept a driver hashtable created elsewhere
+        [Parameter(Mandatory = $false)]
+        [hashtable]
+        $Driver,
+
+        # Allows the cmdlet to accept a verifier hashtable created elsewhere
+        [Parameter(Mandatory = $false)]
+        [hashtable]
+        $Verifier,
+
+        # Allows the cmdlet to accept a platforms hashtable created elsewhere
+        [Parameter(Mandatory = $false)]
+        [hashtable[]]
+        $Platforms,
+
+        # Allows the cmdlet to accept a suites hashtable created elsewhere
+        [Parameter(Mandatory = $false)]
+        [hashtable[]]
+        $Suites,
+
         # The provisioner config to use
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [string]
         $ProvisionerConfigKey,
 
         # The platform config to use
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [string[]]
         $PlatformConfigKey,
 
         # The suites config to use
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [string[]]
         $SuitesConfigKey,
 
         # The verifier config to use
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [string]
         $VerifierConfigKey,
 
         # The driver key to use
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [string]
         $DriverConfigKey,
 
-        # Provisioner config
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
-        )]
-        [hashtable]
-        $ProvisionerConfig,
-
-        # The platform config
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
-        )]
-        [hashtable]
-        $PlatformConfig,
-
-        # The suites config
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
-        )]
-        [hashtable]
-        $SuitesConfig,
-
-        # The verifier config
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
-        )]
-        [hashtable]
-        $VerifierConfig,
-
-        # The driver config
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
-        )]
-        [hashtable]
-        $DriverConfig,
-
         # If set will instead of returning one kitchen.yml the output will be split into individual yaml files for each section
         [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
+            Mandatory = $false
         )]
         [switch]
         $FilePerSection,
 
-        # If true will use the special OS mappings config to generate provisioners/suites
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'Config'
-        )]
-        [bool]
-        $UseOSMapping = $true,
-
-        # The special OS mapping config
-        [Parameter(
-            Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'Config'
-        )]
-        [string]
-        $OSMappingConfigFile = (Join-Path $Script:ModuleConfigDirectory 'os_mapping_config.json'),
-
         # The provisioner config file
         [Parameter(
             Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
+            DontShow
         )]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -156,8 +88,7 @@ function New-KitchenYml
         # The platform config file
         [Parameter(
             Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
+            DontShow
         )]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -166,8 +97,7 @@ function New-KitchenYml
         # The config file for verifiers
         [Parameter(
             Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
+            DontShow
         )]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -176,8 +106,7 @@ function New-KitchenYml
         # The config file for suites
         [Parameter(
             Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
+            DontShow
         )]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -186,8 +115,7 @@ function New-KitchenYml
         # The config file for drivers
         [Parameter(
             Mandatory = $false,
-            DontShow,
-            ParameterSetName = 'ConfigFiles'
+            DontShow
         )]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -200,51 +128,35 @@ function New-KitchenYml
     }
     
     process
-    {
-        <#
-            TODO: Document this process
-        #>
-        if ($UseOSMapping)
+    {        
+        if ((!$PlatformConfig) -and (!$Platforms))
         {
             try
             {
-                $OSMappings = Get-SupportedOSConfiguration -OSMappingConfigFile $OSMappingConfigFile
+                Write-Verbose "Loaded platform config from '$PlatformConfigFile'"
+                $PlatformConfig = Get-Content $PlatformConfigFile -Raw | ConvertFrom-Json -AsHashtable
             }
             catch
             {
-                throw 'Failed to get supported OS configuration'
+                throw "Failed to load platform config.`n$($_.Exception.Message)"
             }
         }
-        else
+
+        if ((!$SuitesConfig) -and (!$Suites))
         {
-            if (!$PlatformConfig)
+            try
             {
-                try
-                {
-                    Write-Verbose "Loaded platform config from '$PlatformConfigFile'"
-                    $PlatformConfig = Get-Content $PlatformConfigFile -Raw | ConvertFrom-Json -AsHashtable
-                }
-                catch
-                {
-                    throw "Failed to load platform config.`n$($_.Exception.Message)"
-                }
+                Write-Verbose "Loaded suites config from '$SuitesConfigFile'"
+                $SuitesConfig = Get-Content $SuitesConfigFile -Raw | ConvertFrom-Json -AsHashtable
             }
-
-            if (!$SuitesConfig)
+            catch
             {
-                try
-                {
-                    Write-Verbose "Loaded suites config from '$SuitesConfigFile'"
-                    $SuitesConfig = Get-Content $SuitesConfigFile -Raw | ConvertFrom-Json -AsHashtable
-                }
-                catch
-                {
-                    throw "Failed to get suites config.`n$($_.Exception.Message)"
-                }
+                throw "Failed to get suites config.`n$($_.Exception.Message)"
             }
         }
+        
 
-        if (!$DriverConfig)
+        if ((!$DriverConfig) -and (!$Driver))
         {
             try
             {
@@ -257,7 +169,7 @@ function New-KitchenYml
             }
         }
 
-        if (!$VerifierConfig)
+        if ((!$VerifierConfig) -and (!$Verifier))
         {
             try
             {
@@ -270,7 +182,7 @@ function New-KitchenYml
             }
         }
 
-        if (!$ProvisionerConfig)
+        if ((!$ProvisionerConfig) -and (!$Provisioner))
         {
             try
             {
@@ -284,7 +196,7 @@ function New-KitchenYml
         }
 
         <#
-            Now we'll use either the loaded config or user provided config to start building up the templates.
+            Now we'll use either the loaded config or user provided blocks to start building up the templates.
             The general process is the same for each, we read the config then pass those values to the corresponding
             cmdlet that will generate a hashtable in the format we expect so we can convert it to YAML.
             We ensure we can generate all the files first before writing anything to disk.
@@ -301,29 +213,41 @@ function New-KitchenYml
             # Create a hashtable that we can use to convert into YAML
             $ProvisionerYMLHash = @{provisioner = $null }
 
-            # If a user hasn't provided a specific provisioner config to use then load the default
-            if (!$ProvisionerConfigKey)
+            <#
+                If the user has already created a provisioner block elsewhere (e.g. another cmdlet/external process etc)
+                then we simply use that without performing any fancy logic.
+                This allows the cmdlet to be reasonably versatile
+            #>
+            if ($Provisioner)
             {
-                Write-Verbose "Using 'Default' provisioner"
-                if (!$ProvisionerConfig.Default)
+                Write-Verbose "Provisioner provided, skipping generation"
+                $ProvisionerYMLHash.provisioner = $Provisioner
+            }
+            else
+            {
+                # If a user hasn't provided a specific provisioner config to use then load the default
+                if (!$ProvisionerConfigKey)
                 {
-                    throw "The '-ProvisionerConfigKey' was not provided and no 'Default' key was found in the provisioner config."
+                    Write-Verbose "Using 'Default' provisioner"
+                    if (!$ProvisionerConfig.Default)
+                    {
+                        throw "The '-ProvisionerConfigKey' was not provided and no 'Default' key was found in the provisioner config."
+                    }
+                    $ProvisionerConfigKey = $ProvisionerConfig.Default
                 }
-                $ProvisionerConfigKey = $ProvisionerConfig.Default
+                Write-Debug "ProvisionerConfigKey = $ProvisionerConfigKey"
+
+                if (!$ProvisionerConfig.$ProvisionerConfigKey)
+                {
+                    throw "The key '$ProvisionerConfigKey' was not found in the provisioner config."
+                }
+
+                # Build the parameters that are passed to the New-KitchenProvisioner cmdlet
+                $ProvisionerParams = $ProvisionerConfig.$ProvisionerConfigKey
+
+                # Generate the provisioner values and store them in our hashtable
+                $ProvisionerYMLHash.provisioner = New-KitchenProvisioner @ProvisionerParams
             }
-            Write-Debug "ProvisionerConfigKey = $ProvisionerConfigKey"
-
-            if (!$ProvisionerConfig.$ProvisionerConfigKey)
-            {
-                throw "The key '$ProvisionerConfigKey' was not found in the provisioner config."
-            }
-
-            # Build the parameters that are passed to the New-KitchenProvisioner cmdlet
-            $ProvisionerParams = $ProvisionerConfig.$ProvisionerConfigKey
-
-            # Generate the provisioner values and store them in our hashtable
-            $ProvisionerYMLHash.provisioner = New-KitchenProvisioner @ProvisionerParams
-
             # Convert the hashtable to YAML
             $ProvisionerYMLContent += $ProvisionerYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
@@ -339,15 +263,16 @@ function New-KitchenYml
 # These are effectively where you will define the operating systems that your tests will run against.
 # You can choose to override specific settings at a platform level if you wish (e.g. driver, transport_method etc)`n
 "@
-            $Platforms = @()
             $PlatformsYMLHash = @{platforms = @() }
 
-            if ($OSMappings)
+            if ($Platforms)
             {
-                $PlatformsYMLHash.platforms = $OSMappings.KitchenPlatforms
+                Write-Verbose "Platforms provided, skipping generation"
+                $PlatformsYMLHash.platforms = $Platforms
             }
             else
             {
+                $Platforms = @()
                 if (!$PlatformConfigKey)
                 {
                     Write-Verbose "Using 'Default' platform"
@@ -386,27 +311,34 @@ function New-KitchenYml
 # This is where you specify what driver to use for the tests.
 # This can be overridden at the platform/suite level.`n
 "@
-
-            if (!$DriverConfigKey)
-            {
-                Write-Verbose "Using 'Default' driver"
-                if (!$DriverConfig.Default)
-                {
-                    throw "The '-DriverConfigKey' was not provided and no 'Default' key was found in the driver config."
-                }
-                $DriverConfigKey = $DriverConfig.Default
-            }
-
-            Write-Debug "DriverConfigKey = $DriverConfigKey"
-
-            if (!$DriverConfig.$DriverConfigKey)
-            {
-                throw "The key '$DriverConfigKey' was not found in the driver config."
-            }
-            
-            $DriverParams = $DriverConfig.$DriverConfigKey
             $DriverYMLHash = @{driver = $null }
-            $DriverYMLHash.driver = New-KitchenDriver @DriverParams -ErrorAction 'Stop'
+            if ($Driver)
+            {
+                Write-Verbose "Driver provided, skipping generation"
+                $DriverYMLHash.driver = $Driver
+            }
+            else
+            {
+                if (!$DriverConfigKey)
+                {
+                    Write-Verbose "Using 'Default' driver"
+                    if (!$DriverConfig.Default)
+                    {
+                        throw "The '-DriverConfigKey' was not provided and no 'Default' key was found in the driver config."
+                    }
+                    $DriverConfigKey = $DriverConfig.Default
+                }
+
+                Write-Debug "DriverConfigKey = $DriverConfigKey"
+
+                if (!$DriverConfig.$DriverConfigKey)
+                {
+                    throw "The key '$DriverConfigKey' was not found in the driver config."
+                }
+            
+                $DriverParams = $DriverConfig.$DriverConfigKey
+                $DriverYMLHash.driver = New-KitchenDriver @DriverParams -ErrorAction 'Stop'
+            }
             $DriverYMLContent += $DriverYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
         catch
@@ -421,26 +353,32 @@ function New-KitchenYml
 # This tests the configuration applied by the provisioner. 
 # It can be overridden at the suite/platform level.`n
 "@
-
-            if (!$VerifierConfigKey)
-            {
-                Write-Verbose "Using 'Default' verifier"
-                if (!$VerifierConfig.Default)
-                {
-                    throw "The '-VerifierConfigKey' was not provided and no 'Default' key was found in the verifier config."
-                }
-                $VerifierConfigKey = $VerifierConfig.Default
-            }
-
-            Write-Debug "VerifierConfigKey = $VerifierConfigKey"
-            if (!$VerifierConfig.$VerifierConfigKey)
-            {
-                throw "The key '$VerifierConfigKey' was not found in the verifier config."
-            }
-            
             $VerifierYMLHash = @{verifier = $null }
-            $VerifierParams = $VerifierConfig.$VerifierConfigKey
-            $VerifierYMLHash.verifier = New-KitchenVerifier @VerifierParams
+            if ($Verifier)
+            {
+                Write-Verbose "Verifier provided, skipping generation"
+                $VerifierYMLHash.verifier = $Verifier
+            }
+            else
+            {
+                if (!$VerifierConfigKey)
+                {
+                    Write-Verbose "Using 'Default' verifier"
+                    if (!$VerifierConfig.Default)
+                    {
+                        throw "The '-VerifierConfigKey' was not provided and no 'Default' key was found in the verifier config."
+                    }
+                    $VerifierConfigKey = $VerifierConfig.Default
+                }
+
+                Write-Debug "VerifierConfigKey = $VerifierConfigKey"
+                if (!$VerifierConfig.$VerifierConfigKey)
+                {
+                    throw "The key '$VerifierConfigKey' was not found in the verifier config."
+                }
+                $VerifierParams = $VerifierConfig.$VerifierConfigKey
+                $VerifierYMLHash.verifier = New-KitchenVerifier @VerifierParams
+            }
             $VerifierYMLContent += $VerifierYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
         catch
@@ -458,15 +396,15 @@ function New-KitchenYml
 # This is typically where you'll want to override any settings from other sections that require specific overrides 
 # for a particular OS/manifest combination.`n
 "@
-            $Suites = @()
             $SuitesYMLHash = @{suites = @() }
-
-            if ($OSMappings)
+            if ($Suites)
             {
-                $SuitesYMLHash.suites = $OSMappings.KitchenSuites
+                Write-Verbose "Suites provided, skipping generation"
+                $SuitesYMLHash.suites = $Suites
             }
             else
             {
+                $Suites = @()
                 if (!$SuitesConfigKey)
                 {
                     Write-Verbose "Using 'Default' suites"

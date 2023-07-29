@@ -145,6 +145,26 @@ function Add-KitchenTemplates
             throw "Kitchen template files already exist. Use 'Update-KitchenYMLTemplate' to update them.`n$FoundFiles"
         }
 
+        
+        <#
+            If we're using our special OS mapping file...
+            TODO: Explain this madness
+        #>
+        if ($UseOSMapping)
+        {
+            try
+            {
+                Write-Verbose 'Using mappings file to generate kitchen suites/platforms'
+                $OSMappings = Get-SupportedOSConfiguration `
+                    -OSMappingConfigFile $OSMappingConfigFile `
+                    -ErrorAction 'Stop'
+            }
+            catch
+            {
+                throw "Failed to generate kitchen suites/platforms from OS mappings.`n$($_.Exception.Message)"
+            }
+        }
+
         try
         {
             $NewKitchenYmlParams = @{
@@ -153,9 +173,13 @@ function Add-KitchenTemplates
                 VerifierConfigFile    = $VerifierConfigFile
                 SuitesConfigFile      = $SuitesConfigFile
                 PlatformConfigFile    = $PlatformConfigFile
-                OSMappingConfigFile   = $OSMappingConfigFile
                 FilePerSection        = $true
-                UseOSMapping          = $UseOSMapping
+            }
+            if ($OSMappings)
+            {
+                # TODO: is it possible these might be $null if someone isn't using kitchen, does it matter?
+                $NewKitchenYmlParams.Add('Suites', $OSMappings.KitchenSuites)
+                $NewKitchenYmlParams.Add('Platforms', $OSMappings.KitchenPlatforms)
             }
             if ($DriverConfigKey)
             {

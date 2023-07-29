@@ -13,7 +13,7 @@ function Get-SupportedOSConfiguration
     param
     (
         # The operating systems to create configs for
-        [Parameter(Mandatory = $false)] # TODO: make this mandatory
+        [Parameter(Mandatory = $false)] # TODO: make this mandatory? pull it from mappings file?
         [string[]]
         $OperatingSystems = @('UbuntuServer'),
 
@@ -26,6 +26,7 @@ function Get-SupportedOSConfiguration
     begin
     {
         $Return = @()
+        Write-Debug "OSMappingConfigFile: $OSMappingConfigFile"
     }
     
     process
@@ -74,6 +75,10 @@ function Get-SupportedOSConfiguration
                 if ($OSName -in $OperatingSystems)
                 {
                     $Kernel = $_.Value.Kernel
+                    if (!$Kernel)
+                    {
+                        throw "OS Mapping config for '$OSName' does not seem to contain a key called 'Kernel'. `nPlease verify your configuration and try again."
+                    }
                     switch ($Kernel)
                     {
                         'linux'
@@ -150,7 +155,52 @@ function Get-SupportedOSConfiguration
         }
 
         Write-Debug "Windows count: $($Windows.Count)"
-        # TODO: Windows equiv
+        if ($Windows.Count -gt 0)
+        {
+            foreach ($OS in $Windows)
+            {
+                # Because we previously expanded the entry before dropping it in the Windows array 
+                # we shouldn't need to use GetEnumerator() again
+                $OSName = $OS | Select-Object -ExpandProperty Key
+                $MetadataName = $OS.Value.MetadataName
+                $TestPlatforms = $OS.Value.TestPlatforms
+                $MetadataReleases = @()
+
+                Write-Debug "OSName: $OSName`nMetadataName: $MetadataName`nTestPlatforms: $($TestPlatforms | Out-String)"
+                
+                $TestPlatforms.GetEnumerator() | ForEach-Object {
+                    $PlatformName = $_ | Select-Object -ExpandProperty Key
+                    $MetadataRelease = $_.Value.MetadataRelease
+                    Write-Debug "MetadataRelease: $MetadataRelease"
+                    $MetadataReleases += $MetadataRelease
+                    if ($_.Value.KitchenPlatformSettings)
+                    {
+                        $KitchenPlatformParams = $_.Value.KitchenPlatformSettings
+                        $KitchenPlatformName = "$OSName-$PlatformName"
+                        Write-Verbose "Creating kitchen platform for $KitchenPlatformName"
+                        Write-Debug "KitchenPlatformName: $KitchenPlatformName`nKitchenPlatformParams: $($KitchenPlatformParams | Out-String)"
+                        $KitchenPlatformParams.Add('PlatformName', $KitchenPlatformName)
+                        try
+                        {
+                            $KitchenPlatforms += New-KitchenPlatform @KitchenPlatformParams -ErrorAction 'Stop'
+                        }
+                        catch
+                        {
+                            throw "Failed to create kitchen platform '$KitchenPlatformName'.`n$($_.Exception.Message)"
+                        }
+                    }
+                }
+
+                if ($Metadata.$MetadataName)
+                {
+                    $Metadata.$MetadataName += $MetadataReleases
+                }
+                else
+                {
+                    $Metadata.Add($MetadataName, $MetadataReleases)
+                }
+            }
+        }
 
         if ($KitchenLinuxSuites.Count -gt 0)
         {
@@ -173,7 +223,20 @@ function Get-SupportedOSConfiguration
 
         if ($KitchenWindowsSuites.Count -gt 0)
         {
-
+            $RegexKitchenWindowsSuites = @()
+            $KitchenWindowsSuites | ForEach-Object {
+                $RegexKitchenWindowsSuites += "/$_/"
+            }
+            try
+            {
+                $KitchenSuites += New-KitchenSuite `
+                    -SuiteName 'WindowsTests' `
+                    -SpecFileName 'default_windows_spec.rb' `
+                    -Includes $RegexKitchenWindowsSuites
+            }
+            catch
+            {
+            }
         }
 
         # Remove any metadata dupes
