@@ -11,8 +11,8 @@ enum TestProvider
 # This ensures we can easily check what type of module we're creating
 enum PuppetModuleType
 {
-    private
-    public
+    environment
+    standalone
 }
 
 # Standardise what type of kernel we are testing against
