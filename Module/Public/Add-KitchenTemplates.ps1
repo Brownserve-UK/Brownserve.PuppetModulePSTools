@@ -18,6 +18,11 @@ function Add-KitchenTemplates
         [ValidateNotNullOrEmpty()]
         $DirectoryName = '.kitchen-templates',
 
+        # If set will use OS mappings to generate platforms/suites
+        [Parameter(Mandatory = $false)]
+        [bool]
+        $UseOSMapping = $true,
+
         # The provisioner config to use
         [Parameter(
             Mandatory = $false
@@ -59,11 +64,6 @@ function Add-KitchenTemplates
         )]
         [switch]
         $Force,
-
-        # If set will use OS mappings to generate platforms/suites
-        [Parameter(Mandatory = $false)]
-        [bool]
-        $UseOSMapping = $true,
 
         # Load our special OS mapping config file
         [Parameter(Mandatory = $false)]
