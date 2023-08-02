@@ -1,0 +1,61 @@
+{
+    "Driver": {
+        "Docker": {
+            "Driver": "docker"
+        },
+        "Vagrant": {
+            "Driver": "vagrant",
+            "AdditionalParameters": {
+                "box_check_update": true,
+                "box_auto_update": true,
+                "box_auto_prune": true
+            }
+        }
+    },
+    "Platforms": {
+        "UbuntuServer-Latest": {
+            "PlatformName": "UbuntuServer-Latest",
+            "DriverPlugin": "vagrant",
+            "TransportOptions": {
+                "name": "ssh_tgz"
+            },
+            "OSInfoObject": {
+                "UbuntuServer": "Latest"
+            }
+        }
+    },
+    "Provisioner": {
+        "Environment": {
+            "ExternalModulesPath": "../../ext-modules:../../modules",
+            "HieraDataPath": "../../hiera.tests.yaml"
+        },
+        "StandaloneModule": {
+            "ExternalModulesPath": "../ext-modules",
+            "HieraDataPath": "../hiera.tests.yaml"
+        }
+    },
+    "Suites": {
+        "Linux":{
+            "SuiteName": "linux_tests",
+            "SpecFileName": "default_linux_spec.rb",
+            "Includes": ["/UbuntuServer/"]
+        },
+        "Windows":{
+            "SuiteName": "windows_tests",
+            "SpecFileName": "default_windows_spec.rb",
+            "Includes": ["/Windows/"]
+        }
+    },
+    "Verifier": {
+        "Shell": {
+            "Verifier": "shell"
+        }
+    },
+    "Default": {
+        "Driver":"Vagrant",
+        "Platforms": ["UbuntuServer-Latest"],
+        "Provisioner":"Environment",
+        "Suites": ["Linux","Windows"],
+        "Verifier": "Shell"
+    }
+}

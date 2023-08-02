@@ -26,6 +26,7 @@ enum TestOSKernel
 enum KitchenDriver
 {
     vagrant
+    docker
 }
 
 <#
@@ -116,6 +117,7 @@ class HieraHierarchy
     }
 }
 
+# TODO: Tidy up the unused classes
 class BSPuppetModuleSupportedOSReleaseDetails
 {
     [string]$PuppetAgentURL
@@ -227,5 +229,28 @@ class BSPuppetModuleSupportedOSConfiguration
                 Details  = $_.Value
             }
         }
+    }
+}
+
+class OSInfoObject
+{
+    [string]$OSFamily
+    [string]$TestPlatform
+
+    OSInfoObject([hashtable]$Hash)
+    {
+        $KeyCount = $Hash.Keys.Count
+        if ($KeyCount -gt 1)
+        {
+            throw "Cannot form object from hashtable, too many keys. Expected 1 got $KeyCount"
+        }
+        $Value = $Hash.GetEnumerator() | ForEach-Object {$_.Value}
+        $ValueType = $Value.GetType()
+        if ($ValueType -notlike 'String')
+        {
+            throw "Cannot form object from hashtable, expected value to be 'String' got '$ValueType'"
+        }
+        $this.OSFamily = $Hash.Keys | Out-String -NoNewline
+        $this.TestPlatform = $Value
     }
 }

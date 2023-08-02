@@ -18,46 +18,6 @@ function Add-KitchenTemplates
         [ValidateNotNullOrEmpty()]
         $DirectoryName = '.kitchen-templates',
 
-        # If set will use OS mappings to generate platforms/suites
-        [Parameter(Mandatory = $false)]
-        [bool]
-        $UseOSMapping = $true,
-
-        # The provisioner config to use
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string]
-        $ProvisionerConfigKey,
-
-        # The platform config to use
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string[]]
-        $PlatformConfigKey,
-
-        # The suites config to use
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string[]]
-        $SuitesConfigKey,
-
-        # The verifier config to use
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string]
-        $VerifierConfigKey,
-
-        # The driver key to use
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string]
-        $DriverConfigKey,
-
         # Forces an overwrite if things already exist
         [Parameter(
             Mandatory = $false
@@ -65,42 +25,45 @@ function Add-KitchenTemplates
         [switch]
         $Force,
 
+        # The name of the key that contains the provisioner you want to use
+        [Parameter(
+            Mandatory = $false
+        )]
+        [string]
+        $KitchenConfigProvisionerKey,
+
+        # The name of the key that contains the verifier you want to use
+        [Parameter(
+            Mandatory = $false
+        )]
+        [string]
+        $KitchenConfigVerifierKey,
+
+        # The name of the key that contains the driver config you want to use
+        [Parameter(
+            Mandatory = $false
+        )]
+        [string]
+        $KitchenConfigDriverKey,
+
+        # The name of the key(s) that contains the platform configuration(s) you want to use
+        [Parameter(
+            Mandatory = $false
+        )]
+        [string[]]
+        $KitchenConfigPlatformKey,
+
+        # The name of the key(s) that contains the suite configuration(s) you want to use
+        [Parameter(
+            Mandatory = $false
+        )]
+        [string[]]
+        $KitchenConfigSuitesKey,
+
         # Load our special OS mapping config file
         [Parameter(Mandatory = $false)]
         [string]
-        $OSMappingConfigFile = (Join-Path $Script:ModuleConfigDirectory 'os_mapping_config.json'),
-
-        # The provisioner config file
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $ProvisionerConfigFile = (Join-Path $Script:ModuleConfigDirectory 'provisioner_config.json'),
-
-        # The platform config file
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $PlatformConfigFile = (Join-Path $Script:ModuleConfigDirectory 'platforms_config.json'),
-
-        # The config file for verifiers
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $VerifierConfigFile = (Join-Path $Script:ModuleConfigDirectory 'verifier_config.json'),
-
-        # The config file for suites
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $SuitesConfigFile = (Join-Path $Script:ModuleConfigDirectory 'suites_config.json'),
+        $OSInfoConfigFile = (Join-Path $Script:ModuleConfigDirectory 'os_info.json'),
 
         # The config file for drivers
         [Parameter(
@@ -108,7 +71,7 @@ function Add-KitchenTemplates
         )]
         [ValidateNotNullOrEmpty()]
         [string]
-        $DriverConfigFile = (Join-Path $Script:ModuleConfigDirectory 'driver_config.json')
+        $KitchenConfigFile = (Join-Path $Script:ModuleConfigDirectory 'kitchen_config.json')
     )
     
     begin
@@ -145,64 +108,42 @@ function Add-KitchenTemplates
             throw "Kitchen template files already exist. Use 'Update-KitchenYMLTemplate' to update them.`n$FoundFiles"
         }
 
-        
-        <#
-            If we're using our special OS mapping file...
-            TODO: Explain this madness
-        #>
-        if ($UseOSMapping)
-        {
-            try
-            {
-                Write-Verbose 'Using mappings file to generate kitchen suites/platforms'
-                $OSMappings = Get-SupportedOSConfiguration `
-                    -OSMappingConfigFile $OSMappingConfigFile `
-                    -ErrorAction 'Stop'
-            }
-            catch
-            {
-                throw "Failed to generate kitchen suites/platforms from OS mappings.`n$($_.Exception.Message)"
-            }
-        }
-
         try
         {
             $NewKitchenYmlParams = @{
-                DriverConfigFile      = $DriverConfigFile
-                ProvisionerConfigFile = $ProvisionerConfigFile
-                VerifierConfigFile    = $VerifierConfigFile
-                SuitesConfigFile      = $SuitesConfigFile
-                PlatformConfigFile    = $PlatformConfigFile
-                FilePerSection        = $true
+                KitchenConfigFile = $KitchenConfigFile
+                FilePerSection    = $true
             }
-            if ($OSMappings)
+            if ($OSInfoConfigFile)
             {
-                # TODO: is it possible these might be $null if someone isn't using kitchen, does it matter?
-                $NewKitchenYmlParams.Add('Suites', $OSMappings.KitchenSuites)
-                $NewKitchenYmlParams.Add('Platforms', $OSMappings.KitchenPlatforms)
+                $NewKitchenYmlParams.Add('OSInfoConfigFile', $OSInfoConfigFile)
             }
             if ($DriverConfigKey)
             {
                 $NewKitchenYmlParams.Add('DriverConfigKey', $DriverConfigKey)
             }
-            if ($ProvisionerConfigKey)
+            if ($KitchenConfigProvisionerKey)
             {
-                $NewKitchenYmlParams.Add('ProvisionerConfigKey', $ProvisionerConfigKey)
+                $NewKitchenYmlParams.Add('KitchenConfigProvisionerKey', $KitchenConfigProvisionerKey)
             }
-            if ($VerifierConfigKey)
+            if ($KitchenConfigVerifierKey)
             {
-                $NewKitchenYmlParams.Add('VerifierConfigKey', $VerifierConfigKey)
+                $NewKitchenYmlParams.Add('KitchenConfigVerifierKey', $KitchenConfigVerifierKey)
             }
-            if ($SuitesConfigKey)
+            if ($KitchenConfigDriverKey)
             {
-                $NewKitchenYmlParams.Add('SuitesConfigKey', $SuitesConfigKey)
+                $NewKitchenYmlParams.Add('KitchenConfigDriverKey', $KitchenConfigDriverKey)
             }
-            if ($PlatformConfigKey)
+            if ($KitchenConfigPlatformKey)
             {
-                $NewKitchenYmlParams.Add('PlatformConfigKey', $PlatformConfigKey)
+                $NewKitchenYmlParams.Add('KitchenConfigPlatformKey', $KitchenConfigPlatformKey)
+            }
+            if ($KitchenConfigSuitesKey)
+            {
+                $NewKitchenYmlParams.Add('KitchenConfigSuitesKey', $KitchenConfigSuitesKey)
             }
 
-            $YamlFiles = New-KitchenYml @NewKitchenYmlParams -ErrorAction 'Stop'
+            $YamlFiles = New-KitchenYmlNew @NewKitchenYmlParams -ErrorAction 'Stop'
         }
         catch
         {

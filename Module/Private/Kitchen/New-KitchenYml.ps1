@@ -34,41 +34,6 @@ function New-KitchenYml
         [hashtable[]]
         $Suites,
 
-        # The provisioner config to use
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string]
-        $ProvisionerConfigKey,
-
-        # The platform config to use
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string[]]
-        $PlatformConfigKey,
-
-        # The suites config to use
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string[]]
-        $SuitesConfigKey,
-
-        # The verifier config to use
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string]
-        $VerifierConfigKey,
-
-        # The driver key to use
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string]
-        $DriverConfigKey,
-
         # If set will instead of returning one kitchen.yml the output will be split into individual yaml files for each section
         [Parameter(
             Mandatory = $false
@@ -76,50 +41,47 @@ function New-KitchenYml
         [switch]
         $FilePerSection,
 
-        # The provisioner config file
-        [Parameter(
-            Mandatory = $false,
-            DontShow
-        )]
-        [ValidateNotNullOrEmpty()]
+        # Parameter help description
+        [Parameter(Mandatory = $false)]
         [string]
-        $ProvisionerConfigFile = (Join-Path $Script:ModuleConfigDirectory 'provisioner_config.json'),
+        $KitchenConfigProvisionerKey,
 
-        # The platform config file
-        [Parameter(
-            Mandatory = $false,
-            DontShow
-        )]
-        [ValidateNotNullOrEmpty()]
+        # Parameter help description
+        [Parameter(Mandatory = $false)]
         [string]
-        $PlatformConfigFile = (Join-Path $Script:ModuleConfigDirectory 'platforms_config.json'),
+        $KitchenConfigVerifierKey,
 
-        # The config file for verifiers
-        [Parameter(
-            Mandatory = $false,
-            DontShow
-        )]
-        [ValidateNotNullOrEmpty()]
+        # Parameter help description
+        [Parameter(Mandatory = $false)]
         [string]
-        $VerifierConfigFile = (Join-Path $Script:ModuleConfigDirectory 'verifier_config.json'),
+        $KitchenConfigDriverKey,
 
-        # The config file for suites
-        [Parameter(
-            Mandatory = $false,
-            DontShow
-        )]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $SuitesConfigFile = (Join-Path $Script:ModuleConfigDirectory 'suites_config.json'),
+        # Parameter help description
+        [Parameter(Mandatory = $false)]
+        [string[]]
+        $KitchenConfigPlatformKey,
 
-        # The config file for drivers
+        # Parameter help description
+        [Parameter(Mandatory = $false)]
+        [string[]]
+        $KitchenConfigSuitesKey,
+
+        # The special config file that holds OS information mappings
+        [Parameter(
+            Mandatory = $false,
+            DontShow
+        )]
+        [string]
+        $OSInfoConfigFile,
+
+        # The special config file that holds the default parameters for the various New-Kitchen cmdlets
         [Parameter(
             Mandatory = $false,
             DontShow
         )]
         [ValidateNotNullOrEmpty()]
         [string]
-        $DriverConfigFile = (Join-Path $Script:ModuleConfigDirectory 'driver_config.json')
+        $KitchenConfigFile
     )
     
     begin
@@ -128,73 +90,65 @@ function New-KitchenYml
     }
     
     process
-    {        
-        if ((!$PlatformConfig) -and (!$Platforms))
+    {   
+        # If we've not passed in any one of the sections we need then we'll need to look up the config from our file
+        if ((!$Provisioner) -or (!$Driver) -or (!$Verifier) -or (!$Platforms) -or (!$Suites))
         {
             try
             {
-                Write-Verbose "Loaded platform config from '$PlatformConfigFile'"
-                $PlatformConfig = Get-Content $PlatformConfigFile -Raw | ConvertFrom-Json -AsHashtable
+                if (!$KitchenConfigFile)
+                {
+                    throw "'-KitchenConfigFile' not declared and one or more Kitchen.yml sections have no declarations."
+                }
+                $KitchenConfig = Get-Content $KitchenConfigFile -Raw | ConvertFrom-Json -AsHashtable
+                if (!$KitchenConfig)
+                {
+                    throw 'Importing config file resulted in an empty object.'
+                }
             }
             catch
             {
-                throw "Failed to load platform config.`n$($_.Exception.Message)"
+                throw "Failed to load kitchen config. `n$($_.Exception.Message)"
+            }
+
+            # If we're missing any one of the keys then we need to load the default values
+            if ((!$KitchenConfigProvisionerKey) -or (!$KitchenConfigVerifierKey) -or (!$KitchenConfigDriverKey) -or (!$KitchenConfigPlatformKey) -or (!$KitchenConfigSuitesKey))
+            {
+                try
+                {
+                    $Defaults = $KitchenConfig.Default
+                    if (!$Defaults)
+                    {
+                        throw "No default values could be found in '$KitchenConfigFile'."
+                    }
+
+                    if (!$KitchenConfigProvisionerKey)
+                    {
+                        $KitchenConfigProvisionerKey = $Defaults.Provisioner
+                    }
+                    if (!$KitchenConfigVerifierKey)
+                    {
+                        $KitchenConfigVerifierKey = $Defaults.Verifier
+                    }
+                    if (!$KitchenConfigDriverKey)
+                    {
+                        $KitchenConfigDriverKey = $Defaults.Driver
+                    }
+                    if (!$KitchenConfigPlatformKey)
+                    {
+                        $KitchenConfigPlatformKey = $Defaults.Platforms
+                    }
+                    if (!$KitchenConfigSuitesKey)
+                    {
+                        $KitchenConfigSuitesKey = $Defaults.Suites
+                    }
+                }
+                catch
+                {
+                    throw "Failed to load default values from kitchen configuration. `n$($_.Exception.Message)"
+                }
             }
         }
-
-        if ((!$SuitesConfig) -and (!$Suites))
-        {
-            try
-            {
-                Write-Verbose "Loaded suites config from '$SuitesConfigFile'"
-                $SuitesConfig = Get-Content $SuitesConfigFile -Raw | ConvertFrom-Json -AsHashtable
-            }
-            catch
-            {
-                throw "Failed to get suites config.`n$($_.Exception.Message)"
-            }
-        }
-        
-
-        if ((!$DriverConfig) -and (!$Driver))
-        {
-            try
-            {
-                Write-Verbose "Loaded driver config from '$DriverConfigFile'"
-                $DriverConfig = Get-Content $DriverConfigFile -Raw | ConvertFrom-Json -AsHashtable
-            }
-            catch
-            {
-                throw "Failed to get driver config.`n$($_.Exception.Message)"
-            }
-        }
-
-        if ((!$VerifierConfig) -and (!$Verifier))
-        {
-            try
-            {
-                Write-Verbose "Loaded verifier config from '$VerifierConfig'"
-                $VerifierConfig = Get-Content $VerifierConfigFile -Raw | ConvertFrom-Json -AsHashtable
-            }
-            catch
-            {
-                throw "Failed to get verifier config.`n$($_.Exception.Message)"
-            }
-        }
-
-        if ((!$ProvisionerConfig) -and (!$Provisioner))
-        {
-            try
-            {
-                Write-Verbose "Loaded provisioner config from '$ProvisionerConfigFile'"
-                $ProvisionerConfig = Get-Content $ProvisionerConfigFile -Raw | ConvertFrom-Json -AsHashtable
-            }
-            catch
-            {
-                throw "Failed to get provisioner config.`n$($_.Exception.Message)"
-            }
-        }
-
         <#
             Now we'll use either the loaded config or user provided blocks to start building up the templates.
             The general process is the same for each, we read the config then pass those values to the corresponding
@@ -220,30 +174,25 @@ function New-KitchenYml
             #>
             if ($Provisioner)
             {
-                Write-Verbose "Provisioner provided, skipping generation"
+                Write-Verbose 'Provisioner provided, skipping generation'
                 $ProvisionerYMLHash.provisioner = $Provisioner
             }
             else
             {
                 # If a user hasn't provided a specific provisioner config to use then load the default
-                if (!$ProvisionerConfigKey)
+                if (!$KitchenConfigProvisionerKey)
                 {
-                    Write-Verbose "Using 'Default' provisioner"
-                    if (!$ProvisionerConfig.Default)
-                    {
-                        throw "The '-ProvisionerConfigKey' was not provided and no 'Default' key was found in the provisioner config."
-                    }
-                    $ProvisionerConfigKey = $ProvisionerConfig.Default
+                    throw "The '-KitchenConfigProvisionerKey' was not provided and no 'Default' provisioner key was found in '$KitchenConfigFile'."
                 }
-                Write-Debug "ProvisionerConfigKey = $ProvisionerConfigKey"
+                Write-Debug "KitchenConfigProvisionerKey: $KitchenConfigProvisionerKey"
 
-                if (!$ProvisionerConfig.$ProvisionerConfigKey)
-                {
-                    throw "The key '$ProvisionerConfigKey' was not found in the provisioner config."
-                }
 
                 # Build the parameters that are passed to the New-KitchenProvisioner cmdlet
-                $ProvisionerParams = $ProvisionerConfig.$ProvisionerConfigKey
+                $ProvisionerParams = $KitchenConfig.Provisioner.$KitchenConfigProvisionerKey
+                if (!$ProvisionerParams)
+                {
+                    throw "The key '$KitchenConfigProvisionerKey' was not found in the provisioner config."
+                }
 
                 # Generate the provisioner values and store them in our hashtable
                 $ProvisionerYMLHash.provisioner = New-KitchenProvisioner @ProvisionerParams
@@ -267,34 +216,34 @@ function New-KitchenYml
 
             if ($Platforms)
             {
-                Write-Verbose "Platforms provided, skipping generation"
+                Write-Verbose 'Platforms provided, skipping generation'
                 $PlatformsYMLHash.platforms = $Platforms
             }
             else
             {
                 $Platforms = @()
-                if (!$PlatformConfigKey)
+                if (!$KitchenConfigPlatformKey)
                 {
-                    Write-Verbose "Using 'Default' platform"
-                    if (!$PlatformConfig.Default)
-                    {
-                        throw "The '-PlatformConfigKey' was not provided and no 'Default' key was found in the platform config."
-                    }
-                    $PlatformConfigKey = $PlatformConfig.Default
+                    throw "The '-KitchenConfigPlatformKey' was not provided and no 'Default' platforms key was found in '$KitchenConfigFile'."
                 }
-                Write-Debug "PlatformConfigKey = $PlatformConfigKey"
+                Write-Debug "KitchenConfigPlatformKey: $KitchenConfigPlatformKey"
 
                 # We often want to support multiple platforms so we iterate over the default, even if it turns out to be a string this should be safe to do.
-                $PlatformConfigKey | ForEach-Object {
-                    if (!$PlatformConfig.$_)
+                $KitchenConfigPlatformKey | ForEach-Object {
+                    if (!$KitchenConfig.Platforms.$_)
                     {
-                        throw "The key '$_' was not found in the platform config."
+                        throw "The key '$_' was not found in the platforms config of '$KitchenConfigFile'."
                     }
-                    $Platforms += $PlatformConfig.$_
+                    $Platforms += $KitchenConfig.Platforms.$_
                 }
                 Write-Debug "Platforms = $($Platforms -join ', ')"
                 $Platforms | ForEach-Object {
-                    $PlatformsYMLHash.platforms += New-KitchenPlatform @_ -ErrorAction 'Stop'
+                    $PlatformsParams = $_
+                    if ($OSInfoConfigFile)
+                    {
+                        $PlatformsParams.Add('OSInfoConfigFile',$OSInfoConfigFile)
+                    }
+                    $PlatformsYMLHash.platforms += New-KitchenPlatform @PlatformsParams -ErrorAction 'Stop'
                 }
             }
             $PlatformsYMLContent += $PlatformsYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
@@ -314,29 +263,23 @@ function New-KitchenYml
             $DriverYMLHash = @{driver = $null }
             if ($Driver)
             {
-                Write-Verbose "Driver provided, skipping generation"
+                Write-Verbose 'Driver provided, skipping generation'
                 $DriverYMLHash.driver = $Driver
             }
             else
             {
-                if (!$DriverConfigKey)
+                if (!$KitchenConfigDriverKey)
                 {
-                    Write-Verbose "Using 'Default' driver"
-                    if (!$DriverConfig.Default)
-                    {
-                        throw "The '-DriverConfigKey' was not provided and no 'Default' key was found in the driver config."
-                    }
-                    $DriverConfigKey = $DriverConfig.Default
+                    throw "The '-KitchenConfigDriverKey' was not provided and no 'Default' driver key was found in '$KitchenConfigFile'."
                 }
 
-                Write-Debug "DriverConfigKey = $DriverConfigKey"
+                Write-Debug "KitchenConfigDriverKey: $KitchenConfigDriverKey"
 
-                if (!$DriverConfig.$DriverConfigKey)
+                $DriverParams = $KitchenConfig.Driver.$KitchenConfigDriverKey
+                if (!$DriverParams)
                 {
-                    throw "The key '$DriverConfigKey' was not found in the driver config."
+                    throw "The key '$KitchenConfigDriverKey' was not found in the driver config."
                 }
-            
-                $DriverParams = $DriverConfig.$DriverConfigKey
                 $DriverYMLHash.driver = New-KitchenDriver @DriverParams -ErrorAction 'Stop'
             }
             $DriverYMLContent += $DriverYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
@@ -356,27 +299,23 @@ function New-KitchenYml
             $VerifierYMLHash = @{verifier = $null }
             if ($Verifier)
             {
-                Write-Verbose "Verifier provided, skipping generation"
+                Write-Verbose 'Verifier provided, skipping generation'
                 $VerifierYMLHash.verifier = $Verifier
             }
             else
             {
-                if (!$VerifierConfigKey)
+                if (!$KitchenConfigVerifierKey)
                 {
-                    Write-Verbose "Using 'Default' verifier"
-                    if (!$VerifierConfig.Default)
-                    {
-                        throw "The '-VerifierConfigKey' was not provided and no 'Default' key was found in the verifier config."
-                    }
-                    $VerifierConfigKey = $VerifierConfig.Default
+                    throw "The '-KitchenConfigVerifierKey' was not provided and no 'Default' verifier key was found in '$KitchenConfigFile'."
                 }
 
-                Write-Debug "VerifierConfigKey = $VerifierConfigKey"
-                if (!$VerifierConfig.$VerifierConfigKey)
+                Write-Debug "KitchenConfigVerifierKey: $KitchenConfigVerifierKey"
+                $VerifierParams = $KitchenConfig.Verifier.$KitchenConfigVerifierKey
+                if (!$VerifierParams)
                 {
-                    throw "The key '$VerifierConfigKey' was not found in the verifier config."
+                    throw "The key '$KitchenConfigVerifierKey' was not found in the verifier config."
                 }
-                $VerifierParams = $VerifierConfig.$VerifierConfigKey
+                
                 $VerifierYMLHash.verifier = New-KitchenVerifier @VerifierParams
             }
             $VerifierYMLContent += $VerifierYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
@@ -399,29 +338,24 @@ function New-KitchenYml
             $SuitesYMLHash = @{suites = @() }
             if ($Suites)
             {
-                Write-Verbose "Suites provided, skipping generation"
+                Write-Verbose 'Suites provided, skipping generation'
                 $SuitesYMLHash.suites = $Suites
             }
             else
             {
                 $Suites = @()
-                if (!$SuitesConfigKey)
+                if (!$KitchenConfigSuitesKey)
                 {
-                    Write-Verbose "Using 'Default' suites"
-                    if (!$SuitesConfig.Default)
-                    {
-                        throw "The '-SuitesConfigKey' was not provided and no 'Default' key was found in the suites config."
-                    }
-                    $SuitesConfigKey = $SuitesConfig.Default
+                        throw "The '-KitchenConfigSuitesKey' was not provided and no 'Default' suites key was found in '$KitchenConfigFile'."
                 }
 
                 # We may have more than one default suite so iterate over
-                $SuitesConfigKey | ForEach-Object {
-                    if (!$SuitesConfig.$_)
+                $KitchenConfigSuitesKey | ForEach-Object {
+                    if (!$KitchenConfig.Suites.$_)
                     {
                         throw "The key '$_' was not found in the suites config."
                     }
-                    $Suites += $SuitesConfig.$_
+                    $Suites += $KitchenConfig.Suites.$_
                 }
                 $Suites | ForEach-Object {
                     $SuitesYMLHash.suites += New-KitchenSuite @_

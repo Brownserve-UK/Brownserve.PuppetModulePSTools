@@ -1,0 +1,20 @@
+{
+    "UbuntuServer":{
+        "Kernel": "Linux",
+        "MetadataName": "Ubuntu",
+        "TestPlatforms": {
+            "Latest": {
+                "MetadataRelease": "22.04",
+                "vagrant_box": { 
+                    "url": "https://vagrantcloud.com/bento/ubuntu-22.04",
+                    "name": "bento/ubuntu-22.04"
+                },
+                "docker_image": {
+                    "image": "litmusimage/ubuntu:22.04",
+                    "platform": "ubuntu"
+                },
+                "puppet_apt_collections_repo": "https://apt.puppet.com/puppet6-release-jammy.deb"
+            }
+        }
+    }
+}
