@@ -241,7 +241,7 @@ function New-KitchenYml
                     $PlatformsParams = $_
                     if ($OSInfoConfigFile)
                     {
-                        $PlatformsParams.Add('OSInfoConfigFile',$OSInfoConfigFile)
+                        $PlatformsParams.Add('OSInfoConfigFile', $OSInfoConfigFile)
                     }
                     $PlatformsYMLHash.platforms += New-KitchenPlatform @PlatformsParams -ErrorAction 'Stop'
                 }
@@ -346,7 +346,7 @@ function New-KitchenYml
                 $Suites = @()
                 if (!$KitchenConfigSuitesKey)
                 {
-                        throw "The '-KitchenConfigSuitesKey' was not provided and no 'Default' suites key was found in '$KitchenConfigFile'."
+                    throw "The '-KitchenConfigSuitesKey' was not provided and no 'Default' suites key was found in '$KitchenConfigFile'."
                 }
 
                 # We may have more than one default suite so iterate over
@@ -374,32 +374,39 @@ function New-KitchenYml
                 @{
                     FileName = 'provisioner.yml'
                     Content  = $ProvisionerYMLContent
+                    Object   = $ProvisionerYMLHash
                 },
                 @{
                     FileName = 'driver.yml'
                     Content  = $DriverYMLContent
+                    Object   = $DriverYMLHash
                 },
                 @{
                     FileName = 'platforms.yml'
                     Content  = $PlatformsYMLContent
+                    Object   = $PlatformsYMLHash
                 },
                 @{
                     FileName = 'verifier.yml'
                     Content  = $VerifierYMLContent
+                    Object   = $VerifierYMLHash
                 },
                 @{
                     FileName = 'suites.yml'
                     Content  = $SuitesYMLContent
+                    Object   = $SuitesYMLHash
                 }
             )
             $YamlFiles | ForEach-Object { $_.Content = $FileHeader + $_.Content }
         }
         else
         {
+            $KitchenObject = $ProvisionerYMLHash + $DriverYMLHash + $VerifierYMLHash + $PlatformsYMLHash + $SuitesYMLHash
             $KitchenYaml = $FileHeader + $ProvisionerYMLContent + "`n" + $DriverYMLContent + "`n" + $VerifierYMLContent + "`n" + $PlatformsYMLContent + "`n" + $SuitesYMLContent
             $YamlFiles = @(@{
                     FileName = 'kitchen.yml'
                     Content  = $KitchenYaml
+                    Object   = $KitchenObject
                 })
         }
     }
