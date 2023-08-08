@@ -143,7 +143,7 @@ function Add-KitchenTemplates
                 $NewKitchenYmlParams.Add('KitchenConfigSuitesKey', $KitchenConfigSuitesKey)
             }
 
-            $YamlFiles = New-KitchenYmlNew @NewKitchenYmlParams -ErrorAction 'Stop'
+            $YamlFiles = New-KitchenYml @NewKitchenYmlParams -ErrorAction 'Stop'
         }
         catch
         {
