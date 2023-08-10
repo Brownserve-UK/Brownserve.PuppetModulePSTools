@@ -404,7 +404,7 @@ function New-KitchenYml
             $KitchenObject = $ProvisionerYMLHash + $DriverYMLHash + $VerifierYMLHash + $PlatformsYMLHash + $SuitesYMLHash
             $KitchenYaml = $FileHeader + $ProvisionerYMLContent + "`n" + $DriverYMLContent + "`n" + $VerifierYMLContent + "`n" + $PlatformsYMLContent + "`n" + $SuitesYMLContent
             $YamlFiles = @(@{
-                    FileName = 'kitchen.yml'
+                    FileName = '.kitchen.yml'
                     Content  = $KitchenYaml
                     Object   = $KitchenObject
                 })
