@@ -1,0 +1,16 @@
+{
+    "default_windows_spec":{
+        "HelperFileName": "spec_helper_windows"
+    },
+    "default_linux_spec":{
+        "HelperFileName": "spec_helper_linux"
+    },
+    "HelperFilePath":{
+        "environment": "../../../../",
+        "standalone": "../"
+    },
+    "HelperFileName":{
+        "linux": "spec_helper_linux",
+        "windows": "spec_helper_windows"
+    }
+}
