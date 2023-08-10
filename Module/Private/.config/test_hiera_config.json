@@ -1,0 +1,15 @@
+{
+    "environment": {
+        "Header": [
+            "This file contains the test data for kitchen to use",
+            "you may wish to override settings that aren't compatible with acceptance tests",
+            "Some settings that are know to cause issues with acceptance testing have already been disabled"
+        ],
+        "Data": {
+            "common::monitor": false,
+            "common::manage_users": false,
+            "common::manage_puppet": false
+        }
+    },
+    "standalone": {}
+}
