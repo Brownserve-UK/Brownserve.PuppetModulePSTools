@@ -66,6 +66,11 @@ function New-KitchenYml
         [string[]]
         $KitchenConfigSuitesKey,
 
+        # Skip any sections that are not provided.
+        [Parameter(Mandatory = $false)]
+        [switch]
+        $SkipMissingSections,
+
         # The special config file that holds OS information mappings
         [Parameter(
             Mandatory = $false,
@@ -158,12 +163,7 @@ function New-KitchenYml
         #>
         try
         {
-            # Start by having some header text explaining what the section does
-            $ProvisionerYMLContent = @"
-# The below contains the provisioner config.
-# This instructs kitchen on how to provision the test vm/container with Puppet.
-# For a detailed list of options please see https://github.com/neillturner/kitchen-puppet/blob/master/provisioner_options.md`n
-"@
+            $ProvisionerYMLContent = ""
             # Create a hashtable that we can use to convert into YAML
             $ProvisionerYMLHash = @{provisioner = $null }
 
@@ -195,7 +195,13 @@ function New-KitchenYml
                 }
 
                 # Generate the provisioner values and store them in our hashtable
-                $ProvisionerYMLHash.provisioner = New-KitchenProvisioner @ProvisionerParams
+                $NewProvisioner = New-KitchenProvisioner @ProvisionerParams
+                $ProvisionerYMLHash.provisioner = $NewProvisioner.Section
+                # If we've got a header add to the start of the file
+                if ($NewProvisioner.Header)
+                {
+                    $ProvisionerYMLContent += $NewProvisioner.Header
+                }
             }
             # Convert the hashtable to YAML
             $ProvisionerYMLContent += $ProvisionerYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
@@ -207,11 +213,7 @@ function New-KitchenYml
 
         try
         {
-            $PlatformsYMLContent = @"
-# The below contains the platform configuration.
-# These are effectively where you will define the operating systems that your tests will run against.
-# You can choose to override specific settings at a platform level if you wish (e.g. driver, transport_method etc)`n
-"@
+            $PlatformsYMLContent = ""
             $PlatformsYMLHash = @{platforms = @() }
 
             if ($Platforms)
@@ -236,14 +238,23 @@ function New-KitchenYml
                     }
                     $Platforms += $KitchenConfig.Platforms.$_
                 }
-                Write-Debug "Platforms = $($Platforms -join ', ')"
+                Write-Debug "Platforms: $($Platforms -join ', ')"
+                $PlatformsTotal = $Platforms.Count
+                $PlatformsCount = 0
                 $Platforms | ForEach-Object {
+                    $PlatformsCount++
                     $PlatformsParams = $_
                     if ($OSInfoConfigFile)
                     {
                         $PlatformsParams.Add('OSInfoConfigFile', $OSInfoConfigFile)
                     }
-                    $PlatformsYMLHash.platforms += New-KitchenPlatform @PlatformsParams -ErrorAction 'Stop'
+                    $NewPlatform = New-KitchenPlatform @PlatformsParams -ErrorAction 'Stop'
+                    $PlatformsYMLHash.platforms += $NewPlatform | Select-Object -ExpandProperty Section
+                    # Ensure we only get one header
+                    if (($NewPlatform.Header) -and ($PlatformsCount -eq $PlatformsTotal))
+                    {
+                        $PlatformsYMLContent += $NewPlatform.Header
+                    }
                 }
             }
             $PlatformsYMLContent += $PlatformsYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
@@ -255,11 +266,7 @@ function New-KitchenYml
 
         try
         {
-            $DriverYMLContent = @"
-# The below contains driver configuration
-# This is where you specify what driver to use for the tests.
-# This can be overridden at the platform/suite level.`n
-"@
+            $DriverYMLContent = ""
             $DriverYMLHash = @{driver = $null }
             if ($Driver)
             {
@@ -280,7 +287,12 @@ function New-KitchenYml
                 {
                     throw "The key '$KitchenConfigDriverKey' was not found in the driver config."
                 }
-                $DriverYMLHash.driver = New-KitchenDriver @DriverParams -ErrorAction 'Stop'
+                $NewDriver = New-KitchenDriver @DriverParams -ErrorAction 'Stop'
+                $DriverYMLHash.driver = $NewDriver.Section
+                if ($NewDriver.Header)
+                {
+                    $DriverYMLContent += $NewDriver.Header
+                }
             }
             $DriverYMLContent += $DriverYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
@@ -291,11 +303,7 @@ function New-KitchenYml
 
         try
         {
-            $VerifierYMLContent += @"
-# The below contains verifier configuration.
-# This tests the configuration applied by the provisioner. 
-# It can be overridden at the suite/platform level.`n
-"@
+            $VerifierYMLContent += ""
             $VerifierYMLHash = @{verifier = $null }
             if ($Verifier)
             {
@@ -315,8 +323,12 @@ function New-KitchenYml
                 {
                     throw "The key '$KitchenConfigVerifierKey' was not found in the verifier config."
                 }
-                
-                $VerifierYMLHash.verifier = New-KitchenVerifier @VerifierParams
+                $NewVerifier = New-KitchenVerifier @VerifierParams
+                $VerifierYMLHash.verifier = $NewVerifier.Section
+                if ($NewVerifier.Header)
+                {
+                    $VerifierYMLContent += $NewVerifier.Header
+                }
             }
             $VerifierYMLContent += $VerifierYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'
         }
@@ -327,14 +339,7 @@ function New-KitchenYml
 
         try
         {
-            $SuitesYMLContent = @"
-# The below are the test suites kitchen will apply.
-# The "verifier: {command:}" dictionary is where the command that executes the verification is stored.
-# These use the serverSpec standard (https://serverspec.org/).
-# By default suites are applied to _every_ platform unless you specify an includes/excludes array.
-# This is typically where you'll want to override any settings from other sections that require specific overrides 
-# for a particular OS/manifest combination.`n
-"@
+            $SuitesYMLContent = ""
             $SuitesYMLHash = @{suites = @() }
             if ($Suites)
             {
@@ -357,8 +362,16 @@ function New-KitchenYml
                     }
                     $Suites += $KitchenConfig.Suites.$_
                 }
+                $SuitesTotal = $Suites.Count
+                $SuitesCount = 0
                 $Suites | ForEach-Object {
-                    $SuitesYMLHash.suites += New-KitchenSuite @_
+                    $SuitesCount++
+                    $NewSuite = New-KitchenSuite @_
+                    $SuitesYMLHash.suites += $NewSuite.Section
+                    if ($NewSuite.Header -and ($SuitesCount -eq $SuitesTotal))
+                    {
+                        $SuitesYMLContent += $NewSuite.Header
+                    }
                 }
             }
             $SuitesYMLContent += $SuitesYMLHash | Invoke-ConvertToYaml -ErrorAction 'Stop'

@@ -106,7 +106,21 @@ function New-KitchenProvisioner
         # Whether or not to perform no-op's
         [Parameter(Mandatory = $false)]
         [bool]
-        $PuppetNoOp = $false
+        $PuppetNoOp = $false,
+
+        # An optional header to be displayed above the provisioner
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
+        [string[]]
+        $Header = @(
+            "The below contains the provisioner configuration.",
+            "This instructs kitchen on how to provision the test vm/container with Puppet.",
+            "Settings specified here can be overridden in a suite or platform definition.",
+            "For a detailed list of options please see https://github.com/neillturner/kitchen-puppet/blob/master/provisioner_options.md"
+        )
     )
     
     begin
@@ -116,6 +130,10 @@ function New-KitchenProvisioner
     
     process
     {
+        if ($null -ne $Header)
+        {
+            $Header = $Header | ConvertTo-BlockComment
+        }
         if ($ManifestName -notmatch '\.pp$')
         {
             $ManifestName = $ManifestName + '.pp'
@@ -157,14 +175,18 @@ function New-KitchenProvisioner
         {
             $ProvisionerHash.Add('custom_facts', $CustomFacts)
         }
-        $ProvisionerYaml = $ProvisionerHash
+        $Return = @{
+            Header = $Header
+            Section = $ProvisionerHash
+        }
+        
     }
     
     end
     {
-        if ($ProvisionerYaml)
+        if ($Return)
         {
-            return $ProvisionerYaml
+            return $Return
         }
         else
         {

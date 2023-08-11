@@ -33,6 +33,19 @@ function New-KitchenPlatform
         [hashtable]
         $ProvisionerOptions,
 
+        # An optional header to be displayed above the platform
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
+        [string[]]
+        $Header = @(
+            "The below contains the platform configuration.",
+            "This is where you define what platform(s) (aka Operating Systems) to use for the tests.",
+            "You can choose to override specific settings at a platform level if you wish (e.g. driver, transport_method etc)."
+        ),
+
         # Special parameter for looking up OS info
         [Parameter(Mandatory = $false)]
         [OSInfoObject]
@@ -50,6 +63,10 @@ function New-KitchenPlatform
     
     process
     {
+        if ($null -ne $Header)
+        {
+            $Header = $Header | ConvertTo-BlockComment
+        }
         $YAMLHash = @(
             [ordered]@{
                 name          = $PlatformName
@@ -141,14 +158,17 @@ function New-KitchenPlatform
         {
             $YAMLHash[0].Add('transport', $TransportOptions)
         }
-        $PlatformTemplate = $YAMLHash
+        $Return = @{
+            Header = $Header
+            Section = $YAMLHash
+        }
     }
     
     end
     {
-        if ($PlatformTemplate)
+        if ($Return)
         {
-            return $PlatformTemplate
+            return $Return
         }
         else
         {

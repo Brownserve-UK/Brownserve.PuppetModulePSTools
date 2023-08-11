@@ -1,3 +1,18 @@
+<#
+.SYNOPSIS
+    Creates a new driver configuration for use in a kitchen.yml file.
+.DESCRIPTION
+    Creates a new driver configuration for use in a kitchen.yml file.
+    Returns a hashtable with the header and section instead of YAML.
+    This is done so that it can be easily merged into the kitchen.yml file or consumed by other functions.
+.EXAMPLE
+    New-KitchenDriver -Driver 'vagrant'
+    New-KitchenDriver -Driver 'vagrant' -AdditionalParameters @{box = 'chef/centos-7.2'}
+    New-KitchenDriver -Driver 'vagrant' -AdditionalParameters @{box = 'chef/centos-7.2'} -Header 'This is a header'
+    New-KitchenDriver -Driver 'vagrant' -AdditionalParameters @{box = 'chef/centos-7.2'} -Header 'This is a header' -Verbose
+#>
+
+
 function New-KitchenDriver
 {
     [CmdletBinding()]
@@ -11,7 +26,20 @@ function New-KitchenDriver
         # Any additional parameters to be used (can vary by driver)
         [Parameter(Mandatory = $false)]
         [hashtable]
-        $AdditionalParameters
+        $AdditionalParameters,
+
+        # An optional header to be displayed above the driver
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
+        [string[]]
+        $Header = @(
+            "The below contains driver configuration",
+            "This is where you specify what driver to use for the tests.",
+            "This can be overridden at the platform/suite level."
+        )
     )
     
     begin
@@ -21,6 +49,10 @@ function New-KitchenDriver
     
     process
     {
+        if ($null -ne $Header)
+        {
+            $Header = $Header | ConvertTo-BlockComment
+        }
         $DriverHash = @{
             name = $Driver
         }
@@ -35,14 +67,17 @@ function New-KitchenDriver
                 throw "Failed to merge driver hashtable objects.`n$($_.Exception.Message)"
             }
         }
-        $DriverYaml = $DriverHash
+        $Return = @{
+            Header = $Header
+            Section = $DriverHash
+        }
     }
     
     end
     {
-        if ($DriverYaml)
+        if ($Return)
         {
-            return $DriverYaml
+            return $Return
         }
         else
         {

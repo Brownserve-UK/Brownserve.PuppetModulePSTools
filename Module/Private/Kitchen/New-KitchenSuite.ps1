@@ -31,7 +31,23 @@ function New-KitchenSuite
         # An optional list of platforms that this suite should exclude
         [Parameter(Mandatory = $false)]
         [array]
-        $Excludes
+        $Excludes,
+
+        # An optional header to be displayed above the suites
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
+        [string[]]
+        $Header = @(
+            "The below are the test suites kitchen will apply to test this module.",
+            "The 'verifier' section is where you specify what command to run to execute the tests.",
+            "By default suites are applied to all platforms, but you can use the 'includes' and 'excludes' sections to limit what platforms a suite is applied to.",
+            "For example, if you have a suite that only applies to Windows, you can use the 'excludes' section to prevent it from being applied to Linux and Mac platforms.",
+            "Suites are where you'll typically want to override other settings, such as the driver or provisioner settings.",
+            "For more information on writing tests, see https://serverspec.org/"
+        )
     )
     
     begin
@@ -44,6 +60,10 @@ function New-KitchenSuite
     
     process
     {
+        if ($null -ne $Header)
+        {
+            $Header = $Header | ConvertTo-BlockComment
+        }
         if ($SpecFileName -notmatch '\.rb$')
         {
             $SpecFileName = $SpecFileName + '.rb'
@@ -65,13 +85,16 @@ function New-KitchenSuite
         {
             $SuiteHash[0].Add('excludes', $Excludes)
         }
-        $SuiteYaml = $SuiteHash
+        $Return = @{
+            Header = $Header
+            Section = $SuiteHash
+        }
     }
     end
     {
-        if ($SuiteYaml)
+        if ($Return)
         {
-            return $SuiteYaml
+            return $Return
         }
         else
         {
