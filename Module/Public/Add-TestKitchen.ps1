@@ -12,7 +12,10 @@ function Add-TestKitchen
         $ModulePath,
 
         # The type of module to be created, standalone (forge) or environment (nested modules directory within a repo)
-        [Parameter(Mandatory = $true)]
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
         [PuppetModuleType]
         $ModuleType,
 
@@ -63,7 +66,9 @@ function Add-TestKitchen
         $KitchenConfigFile = (Join-Path $Script:ModuleConfigDirectory 'kitchen_config.json'),
 
         # Load our special OS mapping config file
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Mandatory = $false
+        )]
         [string]
         $OSInfoConfigFile = (Join-Path $Script:ModuleConfigDirectory 'os_info.json'),
 
@@ -85,7 +90,52 @@ function Add-TestKitchen
         Assert-Directory $ModulePath -ErrorAction 'Stop'
         if ($UseTemplates -eq $true)
         {
+            if (!$TemplateRelativePath)
+            {
+                throw 'TemplateRelativePath must be set when UseTemplates is true'
+            }
             
+            <# 
+                Grab all the templates and then combine them into a single hashtable.
+                We have some logic later on that will scrub the Kitchen configuration for certain things and
+                perform some checks/transformation
+            #>
+            try
+            {
+                # It's important to start the YML file with the correct header otherwise it throws formatters off
+                $KitchenContent = "---`n"
+                $KitchenTemplatePath = (Join-Path $ModulePath $TemplateRelativePath)
+                Write-Debug "KitchenTemplatePath: $KitchenTemplatePath"
+                Assert-Directory $KitchenTemplatePath
+                # Load all the children that are either yml or yaml files, we do not scan recursively as the user may have separate directories for different templates
+                $KitchenTemplates = Get-ChildItem `
+                    -Path  $KitchenTemplatePath `
+                    -ErrorAction 'Stop' | 
+                        Where-Object { ($_.Name -like '*.yml') -or ($_.Name -like '*.yaml') }
+                if (!$KitchenTemplates)
+                {
+                    throw "No templates found in the specified path '$KitchenTemplatePath'"
+                }
+                # Create a Ruby file open command for each template (Kitchen processes as Ruby)
+                $KitchenTemplates | ForEach-Object {
+                    $KitchenContent += "<%= File.open(`"$TemplateRelativePath/$($_.Name)`").read %>`n"
+                }
+                # Get the content of each file and load it in as YML
+                $KitchenTemplateYML = $KitchenTemplates | 
+                    ForEach-Object { Get-Content -Path $_.FullName -Raw } | 
+                        Out-String
+                Write-Debug "KitchenTemplateYML: $KitchenTemplateYML"
+                # Convert to a PowerShell object for use later on.
+                $KitchenYMLObject = Invoke-ConvertFromYaml $KitchenTemplateYML -ErrorAction 'Stop'
+                $KitchenYML = @{
+                    Path    = '.kitchen.yml'
+                    Content = $KitchenContent
+                }
+            }
+            catch
+            {
+                throw "Failed to load templates. `n$($_.Exception.Message)"
+            }
         }
         else
         {
@@ -99,6 +149,8 @@ function Add-TestKitchen
                 $KitchenParams.Add('OSInfoConfigFile', $OSInfoConfigFile)
             }
             $KitchenYML = New-KitchenYml @KitchenParams
+            # We store the object separately due to the way that the template logic above works
+            $KitchenYMLObject = $KitchenYML.Object
         }
 
         # N.B paths are relative to the $ModulePath
@@ -113,7 +165,7 @@ function Add-TestKitchen
             We'll read the output of the kitchen.yml file to ensure we have a single source of truth for the data.
         #>
         # Work out where the test Puppet manifests need to end up
-        $TestManifestDirectory = $KitchenYML.Object.provisioner.manifests_path
+        $TestManifestDirectory = $KitchenYMLObject.provisioner.manifests_path
         if (!$TestManifestDirectory)
         {
             throw "Provisioner property 'manifests_path' has not been set."
@@ -125,7 +177,7 @@ function Add-TestKitchen
         $DirectoriesToCreate += Split-Path $TestManifestDirectory
 
         # Work out where the hiera stuff should end up
-        $TestHieraDirectory = $KitchenYML.Object.provisioner.hiera_data_path
+        $TestHieraDirectory = $KitchenYMLObject.provisioner.hiera_data_path
         if (!$TestHieraDirectory)
         {
             throw "Provisioner property 'hiera_data_path' has not been set."
@@ -162,7 +214,7 @@ function Add-TestKitchen
 
         # There should be a default manifest for us to use, regardless of whether the user has chosen to override it in a suite/platform or not
         # It'll just be a single file with an include statement for the module we're testing
-        $DefaultManifest = $KitchenYML.Object.provisioner.manifest
+        $DefaultManifest = $KitchenYMLObject.provisioner.manifest
         if (!$DefaultManifest)
         {
             throw "Provisioner property 'manifest' has not been set."
@@ -172,15 +224,15 @@ function Add-TestKitchen
             Content = "include $ModuleName"
         }
 
-        if ($KitchenYML.Object.provisioner.hiera_config_path)
+        if ($KitchenYMLObject.provisioner.hiera_config_path)
         {
             # TODO: do a test to make sure we can find it?
         }
 
-        if ($KitchenYML.Object.suites)
+        if ($KitchenYMLObject.suites)
         {
             # May have more than one suite...
-            $KitchenYML.Object.suites | ForEach-Object {
+            $KitchenYMLObject.suites | ForEach-Object {
                 <#
                     We attempt to grab the name of the acceptance test file the user is calling for the suite, this is so we can create it for them.
                     To do that we take the name of the file (e.g spec/acceptance/my_test.rb -> my_test) and then pass it into New-AcceptanceTest which has some logic
